@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Complete School ERP</title>
+<title>School ERP System</title>
 
 <style>
 body{font-family:Arial;margin:0;background:#eef1f5;}
 .header{background:#2c3e50;color:white;padding:15px;text-align:center;}
 .nav{display:flex;flex-wrap:wrap;justify-content:center;background:#34495e;}
 .nav button{color:white;background:none;border:none;padding:10px;cursor:pointer;}
-.card{background:white;margin:15px auto;padding:15px;max-width:800px;border-radius:10px;}
+.card{background:white;margin:15px auto;padding:15px;max-width:900px;border-radius:10px;}
 input,select{width:95%;padding:10px;margin:5px 0;}
 button{padding:8px;margin:5px;border:none;cursor:pointer;}
 .green{background:green;color:white;}
@@ -18,7 +18,6 @@ button{padding:8px;margin:5px;border:none;cursor:pointer;}
 li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8px;}
 </style>
 
-<!-- PDF LIBRARY -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
@@ -29,7 +28,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <div class="card" id="authBox">
 <input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
+<input id="password" type="password">
 <button class="blue" onclick="login()">Login</button>
 <button class="green" onclick="register()">Register</button>
 </div>
@@ -38,21 +37,95 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <div class="nav">
 <button onclick="showSection('students')">Students</button>
+<button onclick="showSection('teachers')">Teachers</button>
+<button onclick="showSection('staff')">Staff</button>
+<button onclick="showSection('fees')">Fees</button>
+<button onclick="showSection('boarding')">Boarding</button>
+<button onclick="showSection('council')">Council</button>
+<button onclick="showSection('bom')">BOM</button>
 <button onclick="showSection('exams')">Exams</button>
 <button onclick="showSection('reports')">Reports</button>
 </div>
 
-<div class="card">
-<button onclick="logout()">Logout</button>
-</div>
+<div class="card"><button onclick="logout()">Logout</button></div>
 
 <!-- STUDENTS -->
 <div id="studentsSection">
 <div class="card">
-<input id="s_name" placeholder="Student Name">
-<button class="green" onclick="addStudent()">Add</button>
+<input id="s_name" placeholder="Name">
+<input id="s_adm" placeholder="Admission">
+<input id="s_class" placeholder="Class">
+<input id="s_age" placeholder="Age">
+<input id="s_parent" placeholder="Parent Contact">
+<button class="green" onclick="addStudent()">Save</button>
 </div>
 <div class="card"><ul id="studentList"></ul></div>
+</div>
+
+<!-- TEACHERS -->
+<div id="teachersSection" style="display:none;">
+<div class="card">
+<input id="t_name" placeholder="Name">
+<select id="t_role">
+<option>Principal</option><option>Deputy</option><option>Class Teacher</option><option>Boarding Master</option>
+</select>
+<input id="t_class" placeholder="Class">
+<input id="t_subject" placeholder="Subject">
+<input id="t_phone" placeholder="Phone">
+<button class="green" onclick="addTeacher()">Save</button>
+</div>
+<div class="card"><ul id="teacherList"></ul></div>
+</div>
+
+<!-- STAFF -->
+<div id="staffSection" style="display:none;">
+<div class="card">
+<input id="st_name" placeholder="Name">
+<input id="st_role" placeholder="Role">
+<button onclick="addStaff()">Save</button>
+</div>
+<div class="card"><ul id="staffList"></ul></div>
+</div>
+
+<!-- FEES -->
+<div id="feesSection" style="display:none;">
+<div class="card">
+<select id="f_student"></select>
+<input id="f_paid" placeholder="Amount Paid">
+<button onclick="addFee()">Save</button>
+</div>
+<div class="card"><ul id="feeList"></ul></div>
+</div>
+
+<!-- BOARDING -->
+<div id="boardingSection" style="display:none;">
+<div class="card">
+<select id="b_student"></select>
+<select id="b_teacher"></select>
+<select id="b_dorm"><option>Simba</option><option>Chui</option></select>
+<button onclick="addBoarding()">Assign</button>
+</div>
+<div class="card"><ul id="boardingList"></ul></div>
+</div>
+
+<!-- COUNCIL -->
+<div id="councilSection" style="display:none;">
+<div class="card">
+<select id="c_student"></select>
+<input id="c_position" placeholder="Position">
+<button onclick="addCouncil()">Save</button>
+</div>
+<div class="card"><ul id="councilList"></ul></div>
+</div>
+
+<!-- BOM -->
+<div id="bomSection" style="display:none;">
+<div class="card">
+<input id="bom_name" placeholder="Name">
+<input id="bom_position" placeholder="Position">
+<button onclick="addBOM()">Save</button>
+</div>
+<div class="card"><ul id="bomList"></ul></div>
 </div>
 
 <!-- EXAMS -->
@@ -61,7 +134,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <select id="ex_student"></select>
 <input id="ex_subject" placeholder="Subject">
 <input id="ex_marks" placeholder="Marks">
-<button class="green" onclick="addExam()">Save</button>
+<button onclick="addExam()">Save</button>
 </div>
 <div class="card"><ul id="examList"></ul></div>
 </div>
@@ -70,34 +143,25 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div id="reportsSection" style="display:none;">
 <div class="card">
 <select id="report_student"></select>
-<button class="green" onclick="generateReport()">Generate Report</button>
-<button class="blue" onclick="downloadPDF()">Download PDF</button>
+<button onclick="generateReport()">Generate</button>
+<button onclick="downloadPDF()">PDF</button>
 </div>
 
-<div class="card">
-<h3>Report Card</h3>
-<div id="reportCard"></div>
-</div>
-
-<div class="card">
-<h3>Class Ranking</h3>
-<ul id="rankingList"></ul>
-</div>
+<div class="card" id="reportCard"></div>
+<div class="card"><ul id="rankingList"></ul></div>
 </div>
 
 </div>
 
 <script>
+
 // AUTH
 let users=JSON.parse(localStorage.getItem("users"))||[];
 let currentUser=localStorage.getItem("currentUser");
 if(currentUser) showSystem();
 
-function register(){
-users.push({username:username.value,password:password.value});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Registered");
-}
+function register(){users.push({username:username.value,password:password.value});
+localStorage.setItem("users",JSON.stringify(users));}
 
 function login(){
 let u=users.find(x=>x.username===username.value && x.password===password.value);
@@ -108,11 +172,17 @@ function logout(){localStorage.removeItem("currentUser");location.reload();}
 
 // DATA
 let students=JSON.parse(localStorage.getItem("students"))||[];
+let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
+let staff=JSON.parse(localStorage.getItem("staff"))||[];
+let fees=JSON.parse(localStorage.getItem("fees"))||[];
+let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
+let council=JSON.parse(localStorage.getItem("council"))||[];
+let bom=JSON.parse(localStorage.getItem("bom"))||[];
 let exams=JSON.parse(localStorage.getItem("exams"))||[];
 
 // NAV
 function showSection(s){
-["students","exams","reports"].forEach(x=>{
+["students","teachers","staff","fees","boarding","council","bom","exams","reports"].forEach(x=>{
 document.getElementById(x+"Section").style.display="none";
 });
 document.getElementById(s+"Section").style.display="block";
@@ -121,33 +191,84 @@ document.getElementById(s+"Section").style.display="block";
 function showSystem(){
 authBox.style.display="none";
 systemBox.style.display="block";
-displayStudents();
-loadStudents();
+loadAll();
+}
+
+// LOAD ALL
+function loadAll(){
+studentList.innerHTML="";
+students.forEach((s,i)=>{
+studentList.innerHTML+=`<li>${s.name}</li>`;
+});
+
+teacherList.innerHTML="";
+teachers.forEach(t=>{
+teacherList.innerHTML+=`<li>${t.name} - ${t.role}</li>`;
+});
+
+st_name.value="";
+
+loadDropdowns();
 displayExams();
 }
 
-// STUDENTS
-function addStudent(){
-students.push({name:s_name.value});
-localStorage.setItem("students",JSON.stringify(students));
-displayStudents();
-loadStudents();
-}
-
-function displayStudents(){
-studentList.innerHTML="";
-students.forEach(s=>{
-studentList.innerHTML+=`<li>${s.name}</li>`;
-});
-}
-
-function loadStudents(){
-ex_student.innerHTML="";
-report_student.innerHTML="";
+// DROPDOWNS
+function loadDropdowns(){
+[f_student,b_student,c_student,ex_student,report_student].forEach(el=>el.innerHTML="");
 students.forEach((s,i)=>{
+f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+b_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+c_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 ex_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 report_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 });
+
+b_teacher.innerHTML="";
+teachers.forEach((t,i)=>{
+b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
+});
+}
+
+// ADD FUNCTIONS
+function addStudent(){
+students.push({name:s_name.value});
+localStorage.setItem("students",JSON.stringify(students));
+loadAll();
+}
+
+function addTeacher(){
+teachers.push({name:t_name.value,role:t_role.value});
+localStorage.setItem("teachers",JSON.stringify(teachers));
+loadAll();
+}
+
+function addStaff(){
+staff.push({name:st_name.value});
+localStorage.setItem("staff",JSON.stringify(staff));
+}
+
+function addFee(){
+let s=students[f_student.value];
+fees.push({student:s.name,paid:f_paid.value});
+localStorage.setItem("fees",JSON.stringify(fees));
+}
+
+function addBoarding(){
+let s=students[b_student.value];
+let t=teachers[b_teacher.value];
+boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
+localStorage.setItem("boarding",JSON.stringify(boarding));
+}
+
+function addCouncil(){
+let s=students[c_student.value];
+council.push({student:s.name,position:c_position.value});
+localStorage.setItem("council",JSON.stringify(council));
+}
+
+function addBOM(){
+bom.push({name:bom_name.value,position:bom_position.value});
+localStorage.setItem("bom",JSON.stringify(bom));
 }
 
 // EXAMS
@@ -163,7 +284,6 @@ function addExam(){
 let s=students[ex_student.value];
 let m=Number(ex_marks.value);
 let g=grade(m);
-
 exams.push({student:s.name,subject:ex_subject.value,marks:m,grade:g});
 localStorage.setItem("exams",JSON.stringify(exams));
 displayExams();
@@ -172,58 +292,52 @@ displayExams();
 function displayExams(){
 examList.innerHTML="";
 exams.forEach(e=>{
-examList.innerHTML+=`<li>${e.student} - ${e.subject}: ${e.marks} (${e.grade})</li>`;
+examList.innerHTML+=`<li>${e.student} ${e.subject} ${e.marks} (${e.grade})</li>`;
 });
 }
 
-// REPORT CARD
+// REPORT
 function generateReport(){
 let s=students[report_student.value].name;
 let data=exams.filter(e=>e.student===s);
 
-let total=0;
-let html=`<h4>${s}</h4>`;
-
+let total=0,html=`<h3>${s}</h3>`;
 data.forEach(d=>{
 total+=d.marks;
 html+=`${d.subject}: ${d.marks} (${d.grade})<br>`;
 });
 
-let avg=(total/data.length)||0;
+let avg=data.length? total/data.length:0;
 html+=`<br><b>Average: ${avg.toFixed(1)}</b>`;
-
 reportCard.innerHTML=html;
 
-generateRanking();
+rankStudents();
 }
 
 // RANKING
-function generateRanking(){
-let map={};
-
-students.forEach(s=>{
-let stuExams=exams.filter(e=>e.student===s.name);
-let total=stuExams.reduce((a,b)=>a+b.marks,0);
-let avg=stuExams.length? total/stuExams.length:0;
-map[s.name]=avg;
+function rankStudents(){
+let arr=students.map(s=>{
+let stu=exams.filter(e=>e.student===s.name);
+let total=stu.reduce((a,b)=>a+b.marks,0);
+let avg=stu.length? total/stu.length:0;
+return {name:s.name,avg};
 });
 
-let sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]);
-
+arr.sort((a,b)=>b.avg-a.avg);
 rankingList.innerHTML="";
-sorted.forEach((r,i)=>{
-rankingList.innerHTML+=`<li>${i+1}. ${r[0]} - ${r[1].toFixed(1)}</li>`;
+arr.forEach((r,i)=>{
+rankingList.innerHTML+=`<li>${i+1}. ${r.name} (${r.avg.toFixed(1)})</li>`;
 });
 }
 
-// PDF EXPORT
+// PDF
 function downloadPDF(){
 const { jsPDF } = window.jspdf;
-let doc = new jsPDF();
-
+let doc=new jsPDF();
 doc.text(reportCard.innerText,10,10);
 doc.save("report.pdf");
 }
+
 </script>
 
 </body>
