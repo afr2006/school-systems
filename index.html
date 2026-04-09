@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>School System</title>
+<title>Boarding School System</title>
 
 <style>
 body{font-family:Arial;margin:0;background:#eef1f5;}
@@ -41,6 +41,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <button onclick="showSection('staff')">Staff</button>
 <button onclick="showSection('fees')">Fees</button>
 <button onclick="showSection('boarding')">Boarding</button>
+<button onclick="showSection('council')">Council</button>
 </div>
 
 <div class="card">
@@ -113,24 +114,40 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <!-- BOARDING -->
 <div id="boardingSection" style="display:none;">
 <div class="card">
-<h3>Assign Boarding</h3>
-
 <select id="b_student"></select>
-
 <select id="b_dorm">
 <option>Simba</option>
 <option>Chui</option>
 <option>Tembo</option>
 <option>Ndovu</option>
 </select>
-
 <select id="b_teacher"></select>
-
 <button class="green" onclick="addBoarding()">Assign</button>
+</div>
+<div class="card"><ul id="boardingList"></ul></div>
+</div>
+
+<!-- COUNCIL -->
+<div id="councilSection" style="display:none;">
+<div class="card">
+<h3>Assign Student Leader</h3>
+
+<select id="c_student"></select>
+
+<select id="c_position">
+<option>President</option>
+<option>Vice President</option>
+<option>Secretary</option>
+<option>Treasurer</option>
+<option>Dining Captain</option>
+<option>Games Captain</option>
+</select>
+
+<button class="green" onclick="addCouncil()">Assign</button>
 </div>
 
 <div class="card">
-<ul id="boardingList"></ul>
+<ul id="councilList"></ul>
 </div>
 </div>
 
@@ -156,69 +173,74 @@ function logout(){localStorage.removeItem("currentUser");location.reload();}
 function showSystem(){
 authBox.style.display="none";
 systemBox.style.display="block";
-displayStudents();displayTeachers();displayStaff();displayFees();displayBoarding();
+displayStudents();displayTeachers();displayStaff();displayFees();
+displayBoarding();displayCouncil();
 loadStudents();loadTeachers();
 }
 
 // NAV
 function showSection(s){
-studentsSection.style.display="none";
-teachersSection.style.display="none";
-staffSection.style.display="none";
-feesSection.style.display="none";
-boardingSection.style.display="none";
+["students","teachers","staff","fees","boarding","council"].forEach(sec=>{
+document.getElementById(sec+"Section").style.display="none";
+});
 document.getElementById(s+"Section").style.display="block";
 }
 
 // STUDENTS
 let students=JSON.parse(localStorage.getItem("students"))||[];
+
 function addStudent(){
-students.push({name:s_name.value,adm:s_adm.value,class:s_class.value,age:s_age.value,parent:s_parent.value});
+students.push({name:s_name.value,adm:s_adm.value});
 localStorage.setItem("students",JSON.stringify(students));
 displayStudents();loadStudents();
 }
+
 function displayStudents(){
 studentList.innerHTML="";
-students.forEach((s,i)=>{
-studentList.innerHTML+=`<li>${s.name} (${s.adm})</li>`;
+students.forEach(s=>{
+studentList.innerHTML+=`<li>${s.name}</li>`;
 });
 }
 
 // TEACHERS
 let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
+
 function addTeacher(){
-teachers.push({name:t_name.value,subject:t_subject.value});
+teachers.push({name:t_name.value});
 localStorage.setItem("teachers",JSON.stringify(teachers));
 displayTeachers();loadTeachers();
 }
+
 function displayTeachers(){
 teacherList.innerHTML="";
-teachers.forEach((t,i)=>{
+teachers.forEach(t=>{
 teacherList.innerHTML+=`<li>${t.name}</li>`;
 });
 }
 
 // STAFF
 let staff=JSON.parse(localStorage.getItem("staff"))||[];
+
 function addStaff(){
 staff.push({name:st_name.value});
 localStorage.setItem("staff",JSON.stringify(staff));
 displayStaff();
 }
+
 function displayStaff(){
 staffList.innerHTML="";
-staff.forEach((s,i)=>{
+staff.forEach(s=>{
 staffList.innerHTML+=`<li>${s.name}</li>`;
 });
 }
 
-// FEES
-let fees=JSON.parse(localStorage.getItem("fees"))||[];
+// LOAD DROPDOWNS
 function loadStudents(){
-f_student.innerHTML="";b_student.innerHTML="";
+f_student.innerHTML="";b_student.innerHTML="";c_student.innerHTML="";
 students.forEach((s,i)=>{
 f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 b_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+c_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 });
 }
 
@@ -229,11 +251,14 @@ b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
 });
 }
 
+// FEES
+let fees=JSON.parse(localStorage.getItem("fees"))||[];
+
 function addFee(){
-let student=students[f_student.value];
+let s=students[f_student.value];
 let paid=Number(f_paid.value);
 let balance=10000-paid;
-fees.push({student:student.name,paid,balance});
+fees.push({student:s.name,paid,balance});
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
 }
@@ -241,7 +266,7 @@ displayFees();
 function displayFees(){
 feeList.innerHTML="";
 let tp=0,tb=0;
-fees.forEach((f)=>{
+fees.forEach(f=>{
 tp+=f.paid;tb+=f.balance;
 feeList.innerHTML+=`<li>${f.student} Paid:${f.paid}</li>`;
 });
@@ -255,25 +280,32 @@ let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
 function addBoarding(){
 let s=students[b_student.value];
 let t=teachers[b_teacher.value];
-
-boarding.push({
-student:s.name,
-dorm:b_dorm.value,
-teacher:t.name
-});
-
+boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
 localStorage.setItem("boarding",JSON.stringify(boarding));
 displayBoarding();
 }
 
 function displayBoarding(){
 boardingList.innerHTML="";
-boarding.forEach((b,i)=>{
-boardingList.innerHTML+=`
-<li>
-${b.student} → Dorm: ${b.dorm}<br>
-Teacher in Charge: ${b.teacher}
-</li>`;
+boarding.forEach(b=>{
+boardingList.innerHTML+=`<li>${b.student} → ${b.dorm} (Teacher: ${b.teacher})</li>`;
+});
+}
+
+// COUNCIL
+let council=JSON.parse(localStorage.getItem("council"))||[];
+
+function addCouncil(){
+let s=students[c_student.value];
+council.push({student:s.name,position:c_position.value});
+localStorage.setItem("council",JSON.stringify(council));
+displayCouncil();
+}
+
+function displayCouncil(){
+councilList.innerHTML="";
+council.forEach(c=>{
+councilList.innerHTML+=`<li>${c.student} - ${c.position}</li>`;
 });
 }
 </script>
