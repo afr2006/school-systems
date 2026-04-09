@@ -1,210 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>School Management System</title>
-
+    <title>School System (Offline)</title>
     <style>
-        body {
-            font-family: Arial;
-            background: #eef2f7;
-            margin: 0;
-        }
-
-        header {
-            background: green;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .container {
-            padding: 20px;
-        }
-
-        input, button {
-            padding: 10px;
-            margin: 5px;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .deleteBtn {
-            background: red;
-            color: white;
-        }
-
-        #dashboard {
-            display: none;
-        }
+        body { font-family: Arial; background:#f4f4f4; text-align:center; }
+        .container { width:90%; max-width:500px; margin:auto; background:white; padding:20px; margin-top:30px; border-radius:10px; }
+        input { width:90%; padding:10px; margin:5px; }
+        button { padding:10px; margin:5px; cursor:pointer; }
+        .hidden { display:none; }
+        .delete { background:red; color:white; }
+        .edit { background:orange; color:white; }
+        .logout { background:black; color:white; }
     </style>
 </head>
-
 <body>
 
-<header>
-    <h2>School System</h2>
-</header>
-
-<div class="container">
-
-    <!-- LOGIN -->
-    <div id="login">
-        <h3>Login</h3>
-        <input type="email" id="email" placeholder="Email"><br>
-        <input type="password" id="password" placeholder="Password"><br>
-        <button onclick="login()">Login</button>
-        <button onclick="showRegister()">Register</button>
-    </div>
-
-    <!-- REGISTER -->
-    <div id="register" style="display:none;">
-        <h3>Register</h3>
-        <input type="email" id="regEmail" placeholder="Email"><br>
-        <input type="password" id="regPassword" placeholder="Password"><br>
-        <button onclick="register()">Create Account</button>
-        <button onclick="showLogin()">Back</button>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div id="dashboard">
-        <h3>Dashboard</h3>
-
-        <input type="text" id="name" placeholder="Student Name">
-        <input type="number" id="age" placeholder="Age">
-        <button onclick="addStudent()">Add Student</button>
-
-        <h3>Students</h3>
-        <ul id="studentList"></ul>
-
-        <button onclick="logout()">Logout</button>
-    </div>
-
+<div class="container" id="auth">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
 </div>
 
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<div class="container hidden" id="app">
+    <h2>Student System</h2>
 
-import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    deleteDoc,
-    doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    <input type="text" id="name" placeholder="Student Name">
+    <input type="text" id="adm" placeholder="Admission No">
+    <button onclick="addStudent()">Add Student</button>
 
+    <h3>Students</h3>
+    <ul id="list"></ul>
 
-// 🔥 PASTE YOUR FIREBASE CONFIG HERE
-const firebaseConfig = {
-    apiKey: "PASTE HERE",
-    authDomain: "PASTE HERE",
-    projectId: "PASTE HERE",
-    storageBucket: "PASTE HERE",
-    messagingSenderId: "PASTE HERE",
-    appId: "PASTE HERE"
-};
+    <button class="logout" onclick="logout()">Logout</button>
+</div>
 
+<script>
+    let editIndex = -1;
 
-// INIT
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    function register() {
+        let email = document.getElementById("email").value;
+        let password = document.getElementById("password").value;
 
+        if (!email || !password) return alert("Fill all fields");
 
-// UI FUNCTIONS
-window.showRegister = function() {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("register").style.display = "block";
-}
-
-window.showLogin = function() {
-    document.getElementById("login").style.display = "block";
-    document.getElementById("register").style.display = "none";
-}
-
-
-// AUTH
-window.register = function() {
-    const email = document.getElementById("regEmail").value;
-    const password = document.getElementById("regPassword").value;
-
-    createUserWithEmailAndPassword(auth, email, password)
-        .then(() => alert("Registered successfully"))
-        .catch(err => alert(err.message));
-}
-
-window.login = function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-            document.getElementById("login").style.display = "none";
-            document.getElementById("dashboard").style.display = "block";
-            loadStudents();
-        })
-        .catch(err => alert(err.message));
-}
-
-window.logout = function() {
-    signOut(auth).then(() => {
-        location.reload();
-    });
-}
-
-
-// STUDENTS
-window.addStudent = async function() {
-    const name = document.getElementById("name").value;
-    const age = document.getElementById("age").value;
-
-    if (!name || !age) {
-        alert("Fill all fields");
-        return;
+        localStorage.setItem("user", JSON.stringify({email, password}));
+        alert("Registered successfully!");
     }
 
-    await addDoc(collection(db, "students"), {
-        name,
-        age
-    });
+    function login() {
+        let email = document.getElementById("email").value;
+        let password = document.getElementById("password").value;
 
-    alert("Student added");
-    loadStudents();
-}
+        let user = JSON.parse(localStorage.getItem("user"));
 
-async function loadStudents() {
-    const list = document.getElementById("studentList");
-    list.innerHTML = "";
+        if (!user || user.email !== email || user.password !== password) {
+            alert("Wrong login details");
+            return;
+        }
 
-    const querySnapshot = await getDocs(collection(db, "students"));
+        document.getElementById("auth").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
 
-    querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+        loadStudents();
+    }
 
-        const li = document.createElement("li");
-        li.innerHTML = `
-            ${data.name} (${data.age})
-            <button class="deleteBtn" onclick="deleteStudent('${docSnap.id}')">Delete</button>
-        `;
+    function logout() {
+        location.reload();
+    }
 
-        list.appendChild(li);
-    });
-}
+    function getStudents() {
+        return JSON.parse(localStorage.getItem("students")) || [];
+    }
 
-window.deleteStudent = async function(id) {
-    await deleteDoc(doc(db, "students", id));
-    loadStudents();
-}
+    function saveStudents(students) {
+        localStorage.setItem("students", JSON.stringify(students));
+    }
 
+    function addStudent() {
+        let name = document.getElementById("name").value;
+        let adm = document.getElementById("adm").value;
+
+        if (!name || !adm) return alert("Fill all fields");
+
+        let students = getStudents();
+
+        if (editIndex === -1) {
+            students.push({name, adm});
+        } else {
+            students[editIndex] = {name, adm};
+            editIndex = -1;
+        }
+
+        saveStudents(students);
+        document.getElementById("name").value = "";
+        document.getElementById("adm").value = "";
+
+        loadStudents();
+    }
+
+    function loadStudents() {
+        let list = document.getElementById("list");
+        list.innerHTML = "";
+
+        let students = getStudents();
+
+        students.forEach((s, index) => {
+            let li = document.createElement("li");
+
+            li.innerHTML = `
+                ${s.name} - ${s.adm}
+                <button class="edit" onclick="editStudent(${index})">Edit</button>
+                <button class="delete" onclick="deleteStudent(${index})">Delete</button>
+            `;
+
+            list.appendChild(li);
+        });
+    }
+
+    function deleteStudent(index) {
+        let students = getStudents();
+        students.splice(index, 1);
+        saveStudents(students);
+        loadStudents();
+    }
+
+    function editStudent(index) {
+        let students = getStudents();
+
+        document.getElementById("name").value = students[index].name;
+        document.getElementById("adm").value = students[index].adm;
+
+        editIndex = index;
+    }
 </script>
 
 </body>
