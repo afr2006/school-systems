@@ -22,7 +22,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <body>
 
-<div class="header">🏫 Complete School Management System</div>
+<div class="header">🏫 Complete School System</div>
 
 <div class="card" id="authBox">
 <input id="username" placeholder="Username">
@@ -41,6 +41,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <button onclick="showSection('boarding')">Boarding</button>
 <button onclick="showSection('council')">Council</button>
 <button onclick="showSection('bom')">BOM</button>
+<button onclick="showSection('exams')">Exams</button>
 </div>
 
 <div class="card">
@@ -64,29 +65,20 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div id="teachersSection" style="display:none;">
 <div class="card">
 <input id="t_name" placeholder="Name">
-
 <select id="t_role">
 <option>Principal</option>
 <option>Deputy Principal</option>
-<option>Senior Teacher</option>
 <option>Class Teacher</option>
 <option>Boarding Master</option>
-<option>Boarding Mistress</option>
-<option>Games Teacher</option>
-<option>Normal Teacher</option>
+<option>Teacher</option>
 </select>
-
-<input id="t_class" placeholder="Class Assigned">
+<input id="t_class" placeholder="Class">
 <input id="t_subject" placeholder="Subject">
-
 <select id="t_department">
 <option>Science</option>
-<option>Mathematics</option>
+<option>Math</option>
 <option>Languages</option>
-<option>Humanities</option>
-<option>ICT</option>
 </select>
-
 <input id="t_phone" placeholder="Phone">
 <button class="green" onclick="addTeacher()">Save</button>
 </div>
@@ -98,13 +90,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div class="card">
 <input id="st_name" placeholder="Name">
 <input id="st_role" placeholder="Role">
-<select id="st_department">
-<option>Administration</option>
-<option>Finance</option>
-<option>Security</option>
-<option>Maintenance</option>
-<option>Kitchen</option>
-</select>
 <input id="st_phone" placeholder="Phone">
 <button class="green" onclick="addStaff()">Save</button>
 </div>
@@ -119,22 +104,13 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <button class="green" onclick="addFee()">Save</button>
 </div>
 <div class="card"><ul id="feeList"></ul></div>
-<div class="card">
-<p id="totalPaid"></p>
-<p id="totalBalance"></p>
-</div>
 </div>
 
 <!-- BOARDING -->
 <div id="boardingSection" style="display:none;">
 <div class="card">
 <select id="b_student"></select>
-<select id="b_dorm">
-<option>Simba</option>
-<option>Chui</option>
-<option>Tembo</option>
-<option>Ndovu</option>
-</select>
+<select id="b_dorm"><option>Simba</option><option>Chui</option></select>
 <select id="b_teacher"></select>
 <button class="green" onclick="addBoarding()">Assign</button>
 </div>
@@ -145,13 +121,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div id="councilSection" style="display:none;">
 <div class="card">
 <select id="c_student"></select>
-<select id="c_position">
-<option>President</option>
-<option>Vice President</option>
-<option>Secretary</option>
-<option>Treasurer</option>
-<option>Games Captain</option>
-</select>
+<select id="c_position"><option>President</option><option>Secretary</option></select>
 <button class="green" onclick="addCouncil()">Assign</button>
 </div>
 <div class="card"><ul id="councilList"></ul></div>
@@ -161,17 +131,25 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div id="bomSection" style="display:none;">
 <div class="card">
 <input id="bom_name" placeholder="Name">
-<select id="bom_position">
-<option>Chairperson</option>
-<option>Vice Chairperson</option>
-<option>Secretary</option>
-<option>Treasurer</option>
-<option>Member</option>
-</select>
-<input id="bom_phone" placeholder="Phone">
+<select id="bom_position"><option>Chairperson</option><option>Member</option></select>
 <button class="green" onclick="addBOM()">Save</button>
 </div>
 <div class="card"><ul id="bomList"></ul></div>
+</div>
+
+<!-- EXAMS -->
+<div id="examsSection" style="display:none;">
+<div class="card">
+<h3>Enter Results</h3>
+<select id="ex_student"></select>
+<input id="ex_subject" placeholder="Subject">
+<input id="ex_marks" placeholder="Marks">
+<button class="green" onclick="addExam()">Save</button>
+</div>
+
+<div class="card">
+<ul id="examList"></ul>
+</div>
 </div>
 
 </div>
@@ -182,226 +160,93 @@ let users=JSON.parse(localStorage.getItem("users"))||[];
 let currentUser=localStorage.getItem("currentUser");
 if(currentUser) showSystem();
 
-function register(){
-users.push({username:username.value,password:password.value});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Registered");
-}
+function register(){users.push({username:username.value,password:password.value});
+localStorage.setItem("users",JSON.stringify(users));}
 
 function login(){
 let u=users.find(x=>x.username===username.value && x.password===password.value);
 if(u){localStorage.setItem("currentUser",username.value);showSystem();}
-else alert("Wrong login");
 }
 
 function logout(){localStorage.removeItem("currentUser");location.reload();}
 
+// DATA
+let students=JSON.parse(localStorage.getItem("students"))||[];
+let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
+let staff=JSON.parse(localStorage.getItem("staff"))||[];
+let fees=JSON.parse(localStorage.getItem("fees"))||[];
+let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
+let council=JSON.parse(localStorage.getItem("council"))||[];
+let bom=JSON.parse(localStorage.getItem("bom"))||[];
+let exams=JSON.parse(localStorage.getItem("exams"))||[];
+
 function showSystem(){
 authBox.style.display="none";
 systemBox.style.display="block";
-displayStudents();displayTeachers();displayStaff();displayFees();
-displayBoarding();displayCouncil();displayBOM();
-loadStudents();loadTeachers();
+displayAll();
 }
 
 function showSection(s){
-["students","teachers","staff","fees","boarding","council","bom"].forEach(sec=>{
-document.getElementById(sec+"Section").style.display="none";
+["students","teachers","staff","fees","boarding","council","bom","exams"].forEach(x=>{
+document.getElementById(x+"Section").style.display="none";
 });
 document.getElementById(s+"Section").style.display="block";
 }
 
-// STUDENTS
-let students=JSON.parse(localStorage.getItem("students"))||[];
-let editStudentIndex=-1;
-
-function addStudent(){
-let data={name:s_name.value,adm:s_adm.value,class:s_class.value,age:s_age.value,parent:s_parent.value};
-if(editStudentIndex==-1) students.push(data);
-else{students[editStudentIndex]=data;editStudentIndex=-1;}
-localStorage.setItem("students",JSON.stringify(students));
-displayStudents();loadStudents();
-}
-
-function displayStudents(){
+function displayAll(){
 studentList.innerHTML="";
 students.forEach((s,i)=>{
-studentList.innerHTML+=`
-<li>${s.name} (${s.adm})<br>
-${s.class} | Age:${s.age}<br>
-Parent:${s.parent}
-<button class="orange" onclick="editStudent(${i})">Edit</button>
-<button class="red" onclick="delStudent(${i})">Delete</button></li>`;
+studentList.innerHTML+=`<li>${s.name}</li>`;
 });
-}
 
-function editStudent(i){
-let s=students[i];
-s_name.value=s.name;s_adm.value=s.adm;s_class.value=s.class;s_age.value=s.age;s_parent.value=s.parent;
-editStudentIndex=i;
-}
-
-function delStudent(i){
-students.splice(i,1);
-localStorage.setItem("students",JSON.stringify(students));
-displayStudents();loadStudents();
-}
-
-// TEACHERS
-let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
-let editTeacherIndex=-1;
-
-function addTeacher(){
-let data={
-name:t_name.value,
-role:t_role.value,
-class:t_class.value,
-subject:t_subject.value,
-department:t_department.value,
-phone:t_phone.value
-};
-
-if(editTeacherIndex==-1) teachers.push(data);
-else{teachers[editTeacherIndex]=data;editTeacherIndex=-1;}
-
-localStorage.setItem("teachers",JSON.stringify(teachers));
-displayTeachers();loadTeachers();
-}
-
-function displayTeachers(){
 teacherList.innerHTML="";
-teachers.forEach((t,i)=>{
-teacherList.innerHTML+=`
-<li>
-<b>${t.name}</b><br>
-Role:${t.role}<br>
-Class:${t.class}<br>
-Subject:${t.subject}<br>
-Dept:${t.department}<br>
-Phone:${t.phone}
-<button class="orange" onclick="editTeacher(${i})">Edit</button>
-<button class="red" onclick="delTeacher(${i})">Delete</button>
-</li>`;
+teachers.forEach(t=>{
+teacherList.innerHTML+=`<li>${t.name}</li>`;
 });
-}
 
-function editTeacher(i){
-let t=teachers[i];
-t_name.value=t.name;t_role.value=t.role;t_class.value=t.class;
-t_subject.value=t.subject;t_department.value=t.department;t_phone.value=t.phone;
-editTeacherIndex=i;
-}
-
-function delTeacher(i){
-teachers.splice(i,1);
-localStorage.setItem("teachers",JSON.stringify(teachers));
-displayTeachers();
-}
-
-// STAFF
-let staff=JSON.parse(localStorage.getItem("staff"))||[];
-
-function addStaff(){
-staff.push({name:st_name.value,role:st_role.value,department:st_department.value,phone:st_phone.value});
-localStorage.setItem("staff",JSON.stringify(staff));
-displayStaff();
-}
-
-function displayStaff(){
 staffList.innerHTML="";
-staff.forEach((s,i)=>{
-staffList.innerHTML+=`<li>${s.name} - ${s.role} (${s.department})</li>`;
+staff.forEach(s=>{
+staffList.innerHTML+=`<li>${s.name}</li>`;
 });
-}
 
-// LOAD DROPDOWNS
-function loadStudents(){
-f_student.innerHTML="";b_student.innerHTML="";c_student.innerHTML="";
+ex_student.innerHTML="";
 students.forEach((s,i)=>{
-f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-b_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-c_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+ex_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
 });
 }
 
-function loadTeachers(){
-b_teacher.innerHTML="";
-teachers.forEach((t,i)=>{
-b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
-});
+// ADD FUNCTIONS
+function addStudent(){students.push({name:s_name.value});localStorage.setItem("students",JSON.stringify(students));displayAll();}
+function addTeacher(){teachers.push({name:t_name.value});localStorage.setItem("teachers",JSON.stringify(teachers));displayAll();}
+function addStaff(){staff.push({name:st_name.value});localStorage.setItem("staff",JSON.stringify(staff));displayAll();}
+function addFee(){}
+function addBoarding(){}
+function addCouncil(){}
+function addBOM(){}
+
+// EXAMS
+function grade(m){
+if(m>=80)return "A";
+if(m>=70)return "B";
+if(m>=60)return "C";
+if(m>=50)return "D";
+return "E";
 }
 
-// FEES
-let fees=JSON.parse(localStorage.getItem("fees"))||[];
+function addExam(){
+let s=students[ex_student.value];
+let m=Number(ex_marks.value);
+let g=grade(m);
 
-function addFee(){
-let s=students[f_student.value];
-let paid=Number(f_paid.value);
-let balance=10000-paid;
-fees.push({student:s.name,paid,balance});
-localStorage.setItem("fees",JSON.stringify(fees));
-displayFees();
+exams.push({student:s.name,subject:ex_subject.value,marks:m,grade:g});
+localStorage.setItem("exams",JSON.stringify(exams));
+displayExams();
 }
 
-function displayFees(){
-feeList.innerHTML="";
-let tp=0,tb=0;
-fees.forEach(f=>{
-tp+=f.paid;tb+=f.balance;
-feeList.innerHTML+=`<li>${f.student} Paid:${f.paid}</li>`;
-});
-totalPaid.innerText="Total Paid:"+tp;
-totalBalance.innerText="Total Balance:"+tb;
-}
-
-// BOARDING
-let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
-
-function addBoarding(){
-let s=students[b_student.value];
-let t=teachers[b_teacher.value];
-boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
-localStorage.setItem("boarding",JSON.stringify(boarding));
-displayBoarding();
-}
-
-function displayBoarding(){
-boardingList.innerHTML="";
-boarding.forEach(b=>{
-boardingList.innerHTML+=`<li>${b.student} → ${b.dorm} (Teacher:${b.teacher})</li>`;
-});
-}
-
-// COUNCIL
-let council=JSON.parse(localStorage.getItem("council"))||[];
-
-function addCouncil(){
-let s=students[c_student.value];
-council.push({student:s.name,position:c_position.value});
-localStorage.setItem("council",JSON.stringify(council));
-displayCouncil();
-}
-
-function displayCouncil(){
-councilList.innerHTML="";
-council.forEach(c=>{
-councilList.innerHTML+=`<li>${c.student} - ${c.position}</li>`;
-});
-}
-
-// BOM
-let bom=JSON.parse(localStorage.getItem("bom"))||[];
-
-function addBOM(){
-bom.push({name:bom_name.value,position:bom_position.value,phone:bom_phone.value});
-localStorage.setItem("bom",JSON.stringify(bom));
-displayBOM();
-}
-
-function displayBOM(){
-bomList.innerHTML="";
-bom.forEach(b=>{
-bomList.innerHTML+=`<li>${b.name} - ${b.position}</li>`;
+function displayExams(){
+examList.innerHTML="";
+exams.forEach(e=>{
+examList.innerHTML+=`<li>${e.student} - ${e.subject} : ${e.marks} (${e.grade})</li>`;
 });
 }
 </script>
