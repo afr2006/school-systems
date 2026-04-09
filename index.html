@@ -1,72 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>School System</title>
+<title>School System</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <style>
-        body { font-family: Arial; margin:0; background:#eef1f5; }
-
-        .header {
-            background:#2c3e50;
-            color:white;
-            padding:15px;
-            text-align:center;
-        }
-
-        .nav {
-            display:flex;
-            justify-content:center;
-            background:#34495e;
-        }
-
-        .nav button {
-            padding:10px;
-            margin:5px;
-            border:none;
-            cursor:pointer;
-            color:white;
-            background:none;
-        }
-
-        .nav button:hover { background:#2c3e50; }
-
-        .card {
-            background:white;
-            margin:15px auto;
-            padding:15px;
-            max-width:700px;
-            border-radius:10px;
-        }
-
-        input {
-            width:95%;
-            padding:10px;
-            margin:5px 0;
-        }
-
-        button {
-            padding:8px;
-            margin:5px;
-            border:none;
-            cursor:pointer;
-        }
-
-        .green{background:green;color:white;}
-        .orange{background:orange;color:white;}
-        .red{background:red;color:white;}
-        .blue{background:blue;color:white;}
-        .black{background:black;color:white;}
-
-        li {
-            list-style:none;
-            background:#f4f4f4;
-            margin:10px 0;
-            padding:10px;
-            border-radius:8px;
-        }
-    </style>
+<style>
+body{font-family:Arial;margin:0;background:#eef1f5;}
+.header{background:#2c3e50;color:white;padding:15px;text-align:center;}
+.nav{display:flex;justify-content:center;background:#34495e;}
+.nav button{color:white;background:none;border:none;padding:10px;cursor:pointer;}
+.card{background:white;margin:15px auto;padding:15px;max-width:700px;border-radius:10px;}
+input,select{width:95%;padding:10px;margin:5px 0;}
+button{padding:8px;margin:5px;border:none;cursor:pointer;}
+.green{background:green;color:white;}
+.red{background:red;color:white;}
+.blue{background:blue;color:white;}
+.black{background:black;color:white;}
+li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8px;}
+</style>
 </head>
 
 <body>
@@ -75,214 +25,225 @@
 
 <!-- AUTH -->
 <div class="card" id="authBox">
-    <h3>Login / Register</h3>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button class="blue" onclick="login()">Login</button>
-    <button class="green" onclick="register()">Register</button>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button class="blue" onclick="login()">Login</button>
+<button class="green" onclick="register()">Register</button>
 </div>
 
 <!-- SYSTEM -->
 <div id="systemBox" style="display:none;">
 
-    <div class="nav">
-        <button onclick="showSection('students')">Students</button>
-        <button onclick="showSection('teachers')">Teachers</button>
-        <button onclick="showSection('fees')">Fees</button>
-    </div>
+<div class="nav">
+<button onclick="showSection('students')">Students</button>
+<button onclick="showSection('teachers')">Teachers</button>
+<button onclick="showSection('fees')">Fees</button>
+</div>
 
-    <div class="card">
-        <button class="black" onclick="logout()">Logout</button>
-    </div>
+<div class="card">
+<button class="black" onclick="logout()">Logout</button>
+</div>
 
-    <!-- STUDENTS -->
-    <div id="studentsSection">
+<!-- STUDENTS -->
+<div id="studentsSection">
+<div class="card">
+<input id="s_name" placeholder="Name">
+<input id="s_adm" placeholder="Admission">
+<input id="s_class" placeholder="Class">
+<button class="green" onclick="addStudent()">Add Student</button>
+</div>
 
-        <div class="card">
-            <h3>Add Student</h3>
-            <input id="s_name" placeholder="Name">
-            <input id="s_adm" placeholder="Admission No">
-            <input id="s_class" placeholder="Class">
-            <button class="green" onclick="addStudent()">Add</button>
-        </div>
+<div class="card">
+<ul id="studentList"></ul>
+</div>
+</div>
 
-        <div class="card">
-            <h3>Students</h3>
-            <ul id="studentList"></ul>
-        </div>
+<!-- TEACHERS -->
+<div id="teachersSection" style="display:none;">
+<div class="card">
+<input id="t_name" placeholder="Name">
+<input id="t_subject" placeholder="Subject">
+<input id="t_phone" placeholder="Phone">
+<button class="green" onclick="addTeacher()">Add Teacher</button>
+</div>
 
-    </div>
+<div class="card">
+<ul id="teacherList"></ul>
+</div>
+</div>
 
-    <!-- TEACHERS -->
-    <div id="teachersSection" style="display:none;">
+<!-- FEES -->
+<div id="feesSection" style="display:none;">
 
-        <div class="card">
-            <h3>Add Teacher</h3>
-            <input id="t_name" placeholder="Name">
-            <input id="t_subject" placeholder="Subject">
-            <input id="t_phone" placeholder="Phone">
-            <button class="green" onclick="addTeacher()">Add</button>
-        </div>
+<div class="card">
+<h3>Add Fee</h3>
 
-        <div class="card">
-            <h3>Teachers</h3>
-            <ul id="teacherList"></ul>
-        </div>
+<select id="f_student"></select>
+<input id="f_paid" placeholder="Amount Paid">
 
-    </div>
+<button class="green" onclick="addFee()">Add Fee</button>
+</div>
 
-    <!-- FEES -->
-    <div id="feesSection" style="display:none;">
+<div class="card">
+<h3>Fee Records</h3>
+<ul id="feeList"></ul>
+</div>
 
-        <div class="card">
-            <h3>Add Fee Record</h3>
-            <input id="f_name" placeholder="Student Name">
-            <input id="f_paid" placeholder="Amount Paid">
-            <input id="f_balance" placeholder="Balance">
-            <button class="green" onclick="addFee()">Add</button>
-        </div>
+<div class="card">
+<h3>Reports 📊</h3>
+<p id="totalPaid"></p>
+<p id="totalBalance"></p>
+</div>
 
-        <div class="card">
-            <h3>Fees</h3>
-            <ul id="feeList"></ul>
-        </div>
-
-    </div>
+</div>
 
 </div>
 
 <script>
 // AUTH
-let users = JSON.parse(localStorage.getItem("users"))||[];
-let currentUser = localStorage.getItem("currentUser");
+let users=JSON.parse(localStorage.getItem("users"))||[];
+let currentUser=localStorage.getItem("currentUser");
 
 if(currentUser) showSystem();
 
 function register(){
-    if(!username.value || !password.value) return alert("Fill fields");
-    users.push({username:username.value,password:password.value});
-    localStorage.setItem("users",JSON.stringify(users));
-    alert("Registered");
+if(!username.value||!password.value) return alert("Fill fields");
+users.push({username:username.value,password:password.value});
+localStorage.setItem("users",JSON.stringify(users));
+alert("Registered");
 }
 
 function login(){
-    let u=users.find(x=>x.username===username.value && x.password===password.value);
-    if(u){
-        localStorage.setItem("currentUser",username.value);
-        showSystem();
-    }else alert("Wrong login");
+let u=users.find(x=>x.username===username.value && x.password===password.value);
+if(u){
+localStorage.setItem("currentUser",username.value);
+showSystem();
+}else alert("Wrong login");
 }
 
 function logout(){
-    localStorage.removeItem("currentUser");
-    location.reload();
+localStorage.removeItem("currentUser");
+location.reload();
 }
 
 function showSystem(){
-    authBox.style.display="none";
-    systemBox.style.display="block";
-    displayStudents();
-    displayTeachers();
-    displayFees();
+authBox.style.display="none";
+systemBox.style.display="block";
+displayStudents();
+displayTeachers();
+displayFees();
+loadStudentsToDropdown();
 }
 
-// NAVIGATION
-function showSection(section){
-    studentsSection.style.display="none";
-    teachersSection.style.display="none";
-    feesSection.style.display="none";
-
-    document.getElementById(section+"Section").style.display="block";
+// NAV
+function showSection(sec){
+studentsSection.style.display="none";
+teachersSection.style.display="none";
+feesSection.style.display="none";
+document.getElementById(sec+"Section").style.display="block";
 }
 
 // STUDENTS
-let students = JSON.parse(localStorage.getItem("students"))||[];
+let students=JSON.parse(localStorage.getItem("students"))||[];
 
 function addStudent(){
-    students.push({
-        name:s_name.value,
-        adm:s_adm.value,
-        class:s_class.value
-    });
-    localStorage.setItem("students",JSON.stringify(students));
-    displayStudents();
+students.push({name:s_name.value,adm:s_adm.value,class:s_class.value});
+localStorage.setItem("students",JSON.stringify(students));
+displayStudents();
+loadStudentsToDropdown();
 }
 
 function displayStudents(){
-    studentList.innerHTML="";
-    students.forEach((s,i)=>{
-        studentList.innerHTML+=`
-        <li>
-        ${s.name} - ${s.adm} (${s.class})
-        <button class="red" onclick="delStudent(${i})">Delete</button>
-        </li>`;
-    });
+studentList.innerHTML="";
+students.forEach((s,i)=>{
+studentList.innerHTML+=`
+<li>${s.name} - ${s.adm} (${s.class})
+<button class="red" onclick="delStudent(${i})">Delete</button></li>`;
+});
 }
 
 function delStudent(i){
-    students.splice(i,1);
-    localStorage.setItem("students",JSON.stringify(students));
-    displayStudents();
+students.splice(i,1);
+localStorage.setItem("students",JSON.stringify(students));
+displayStudents();
+loadStudentsToDropdown();
 }
 
 // TEACHERS
-let teachers = JSON.parse(localStorage.getItem("teachers"))||[];
+let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
 
 function addTeacher(){
-    teachers.push({
-        name:t_name.value,
-        subject:t_subject.value,
-        phone:t_phone.value
-    });
-    localStorage.setItem("teachers",JSON.stringify(teachers));
-    displayTeachers();
+teachers.push({name:t_name.value,subject:t_subject.value,phone:t_phone.value});
+localStorage.setItem("teachers",JSON.stringify(teachers));
+displayTeachers();
 }
 
 function displayTeachers(){
-    teacherList.innerHTML="";
-    teachers.forEach((t,i)=>{
-        teacherList.innerHTML+=`
-        <li>
-        ${t.name} - ${t.subject} (${t.phone})
-        <button class="red" onclick="delTeacher(${i})">Delete</button>
-        </li>`;
-    });
+teacherList.innerHTML="";
+teachers.forEach((t,i)=>{
+teacherList.innerHTML+=`
+<li>${t.name} - ${t.subject} (${t.phone})
+<button class="red" onclick="delTeacher(${i})">Delete</button></li>`;
+});
 }
 
 function delTeacher(i){
-    teachers.splice(i,1);
-    localStorage.setItem("teachers",JSON.stringify(teachers));
-    displayTeachers();
+teachers.splice(i,1);
+localStorage.setItem("teachers",JSON.stringify(teachers));
+displayTeachers();
 }
 
-// FEES
-let fees = JSON.parse(localStorage.getItem("fees"))||[];
+// FEES (LINKED)
+let fees=JSON.parse(localStorage.getItem("fees"))||[];
+
+function loadStudentsToDropdown(){
+f_student.innerHTML="";
+students.forEach((s,i)=>{
+f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+});
+}
 
 function addFee(){
-    fees.push({
-        name:f_name.value,
-        paid:f_paid.value,
-        balance:f_balance.value
-    });
-    localStorage.setItem("fees",JSON.stringify(fees));
-    displayFees();
+let index=f_student.value;
+let student=students[index];
+
+let paid=Number(f_paid.value);
+let total=10000; // example fixed fee
+let balance=total-paid;
+
+fees.push({
+student:student.name,
+paid:paid,
+balance:balance
+});
+
+localStorage.setItem("fees",JSON.stringify(fees));
+displayFees();
 }
 
 function displayFees(){
-    feeList.innerHTML="";
-    fees.forEach((f,i)=>{
-        feeList.innerHTML+=`
-        <li>
-        ${f.name} - Paid: ${f.paid} | Balance: ${f.balance}
-        <button class="red" onclick="delFee(${i})">Delete</button>
-        </li>`;
-    });
+feeList.innerHTML="";
+
+let totalPaid=0;
+let totalBalance=0;
+
+fees.forEach((f,i)=>{
+totalPaid+=f.paid;
+totalBalance+=f.balance;
+
+feeList.innerHTML+=`
+<li>${f.student} - Paid: ${f.paid} | Balance: ${f.balance}
+<button class="red" onclick="delFee(${i})">Delete</button></li>`;
+});
+
+document.getElementById("totalPaid").innerText="Total Paid: "+totalPaid;
+document.getElementById("totalBalance").innerText="Total Balance: "+totalBalance;
 }
 
 function delFee(i){
-    fees.splice(i,1);
-    localStorage.setItem("fees",JSON.stringify(fees));
-    displayFees();
+fees.splice(i,1);
+localStorage.setItem("fees",JSON.stringify(fees));
+displayFees();
 }
 </script>
 
