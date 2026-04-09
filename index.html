@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Boarding School System</title>
+<title>Complete School System</title>
 
 <style>
 body{font-family:Arial;margin:0;background:#eef1f5;}
@@ -22,7 +22,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <body>
 
-<div class="header">🏫 Boarding School System</div>
+<div class="header">🏫 Complete School Management System</div>
 
 <!-- AUTH -->
 <div class="card" id="authBox">
@@ -42,6 +42,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <button onclick="showSection('fees')">Fees</button>
 <button onclick="showSection('boarding')">Boarding</button>
 <button onclick="showSection('council')">Council</button>
+<button onclick="showSection('bom')">BOM</button>
 </div>
 
 <div class="card">
@@ -130,24 +131,37 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <!-- COUNCIL -->
 <div id="councilSection" style="display:none;">
 <div class="card">
-<h3>Assign Student Leader</h3>
-
 <select id="c_student"></select>
-
 <select id="c_position">
 <option>President</option>
 <option>Vice President</option>
 <option>Secretary</option>
 <option>Treasurer</option>
-<option>Dining Captain</option>
 <option>Games Captain</option>
 </select>
-
 <button class="green" onclick="addCouncil()">Assign</button>
+</div>
+<div class="card"><ul id="councilList"></ul></div>
+</div>
+
+<!-- BOM -->
+<div id="bomSection" style="display:none;">
+<div class="card">
+<h3>Add BOM Member</h3>
+<input id="bom_name" placeholder="Name">
+<select id="bom_position">
+<option>Chairperson</option>
+<option>Vice Chairperson</option>
+<option>Secretary</option>
+<option>Treasurer</option>
+<option>Member</option>
+</select>
+<input id="bom_phone" placeholder="Phone">
+<button class="green" onclick="addBOM()">Save</button>
 </div>
 
 <div class="card">
-<ul id="councilList"></ul>
+<ul id="bomList"></ul>
 </div>
 </div>
 
@@ -174,13 +188,13 @@ function showSystem(){
 authBox.style.display="none";
 systemBox.style.display="block";
 displayStudents();displayTeachers();displayStaff();displayFees();
-displayBoarding();displayCouncil();
+displayBoarding();displayCouncil();displayBOM();
 loadStudents();loadTeachers();
 }
 
 // NAV
 function showSection(s){
-["students","teachers","staff","fees","boarding","council"].forEach(sec=>{
+["students","teachers","staff","fees","boarding","council","bom"].forEach(sec=>{
 document.getElementById(sec+"Section").style.display="none";
 });
 document.getElementById(s+"Section").style.display="block";
@@ -188,13 +202,11 @@ document.getElementById(s+"Section").style.display="block";
 
 // STUDENTS
 let students=JSON.parse(localStorage.getItem("students"))||[];
-
 function addStudent(){
-students.push({name:s_name.value,adm:s_adm.value});
+students.push({name:s_name.value});
 localStorage.setItem("students",JSON.stringify(students));
 displayStudents();loadStudents();
 }
-
 function displayStudents(){
 studentList.innerHTML="";
 students.forEach(s=>{
@@ -204,13 +216,11 @@ studentList.innerHTML+=`<li>${s.name}</li>`;
 
 // TEACHERS
 let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
-
 function addTeacher(){
 teachers.push({name:t_name.value});
 localStorage.setItem("teachers",JSON.stringify(teachers));
 displayTeachers();loadTeachers();
 }
-
 function displayTeachers(){
 teacherList.innerHTML="";
 teachers.forEach(t=>{
@@ -220,13 +230,11 @@ teacherList.innerHTML+=`<li>${t.name}</li>`;
 
 // STAFF
 let staff=JSON.parse(localStorage.getItem("staff"))||[];
-
 function addStaff(){
 staff.push({name:st_name.value});
 localStorage.setItem("staff",JSON.stringify(staff));
 displayStaff();
 }
-
 function displayStaff(){
 staffList.innerHTML="";
 staff.forEach(s=>{
@@ -253,7 +261,6 @@ b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
 
 // FEES
 let fees=JSON.parse(localStorage.getItem("fees"))||[];
-
 function addFee(){
 let s=students[f_student.value];
 let paid=Number(f_paid.value);
@@ -262,7 +269,6 @@ fees.push({student:s.name,paid,balance});
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
 }
-
 function displayFees(){
 feeList.innerHTML="";
 let tp=0,tb=0;
@@ -276,7 +282,6 @@ totalBalance.innerText="Total Balance:"+tb;
 
 // BOARDING
 let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
-
 function addBoarding(){
 let s=students[b_student.value];
 let t=teachers[b_teacher.value];
@@ -284,28 +289,45 @@ boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
 localStorage.setItem("boarding",JSON.stringify(boarding));
 displayBoarding();
 }
-
 function displayBoarding(){
 boardingList.innerHTML="";
 boarding.forEach(b=>{
-boardingList.innerHTML+=`<li>${b.student} → ${b.dorm} (Teacher: ${b.teacher})</li>`;
+boardingList.innerHTML+=`<li>${b.student} → ${b.dorm}</li>`;
 });
 }
 
 // COUNCIL
 let council=JSON.parse(localStorage.getItem("council"))||[];
-
 function addCouncil(){
 let s=students[c_student.value];
 council.push({student:s.name,position:c_position.value});
 localStorage.setItem("council",JSON.stringify(council));
 displayCouncil();
 }
-
 function displayCouncil(){
 councilList.innerHTML="";
 council.forEach(c=>{
 councilList.innerHTML+=`<li>${c.student} - ${c.position}</li>`;
+});
+}
+
+// BOM
+let bom=JSON.parse(localStorage.getItem("bom"))||[];
+
+function addBOM(){
+bom.push({
+name:bom_name.value,
+position:bom_position.value,
+phone:bom_phone.value
+});
+localStorage.setItem("bom",JSON.stringify(bom));
+displayBOM();
+}
+
+function displayBOM(){
+bomList.innerHTML="";
+bom.forEach(b=>{
+bomList.innerHTML+=`<li>${b.name} - ${b.position} (${b.phone})</li>`;
 });
 }
 </script>
