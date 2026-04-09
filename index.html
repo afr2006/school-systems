@@ -24,7 +24,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <div class="header">🏫 Complete School Management System</div>
 
-<!-- AUTH -->
 <div class="card" id="authBox">
 <input id="username" placeholder="Username">
 <input id="password" type="password" placeholder="Password">
@@ -32,7 +31,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <button class="green" onclick="register()">Register</button>
 </div>
 
-<!-- SYSTEM -->
 <div id="systemBox" style="display:none;">
 
 <div class="nav">
@@ -66,7 +64,21 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div id="teachersSection" style="display:none;">
 <div class="card">
 <input id="t_name" placeholder="Name">
+
+<select id="t_role">
+<option>Principal</option>
+<option>Deputy Principal</option>
+<option>Senior Teacher</option>
+<option>Class Teacher</option>
+<option>Boarding Master</option>
+<option>Boarding Mistress</option>
+<option>Games Teacher</option>
+<option>Normal Teacher</option>
+</select>
+
+<input id="t_class" placeholder="Class Assigned">
 <input id="t_subject" placeholder="Subject">
+
 <select id="t_department">
 <option>Science</option>
 <option>Mathematics</option>
@@ -74,6 +86,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <option>Humanities</option>
 <option>ICT</option>
 </select>
+
 <input id="t_phone" placeholder="Phone">
 <button class="green" onclick="addTeacher()">Save</button>
 </div>
@@ -147,7 +160,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <!-- BOM -->
 <div id="bomSection" style="display:none;">
 <div class="card">
-<h3>Add BOM Member</h3>
 <input id="bom_name" placeholder="Name">
 <select id="bom_position">
 <option>Chairperson</option>
@@ -159,10 +171,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <input id="bom_phone" placeholder="Phone">
 <button class="green" onclick="addBOM()">Save</button>
 </div>
-
-<div class="card">
-<ul id="bomList"></ul>
-</div>
+<div class="card"><ul id="bomList"></ul></div>
 </div>
 
 </div>
@@ -173,8 +182,11 @@ let users=JSON.parse(localStorage.getItem("users"))||[];
 let currentUser=localStorage.getItem("currentUser");
 if(currentUser) showSystem();
 
-function register(){users.push({username:username.value,password:password.value});
-localStorage.setItem("users",JSON.stringify(users));alert("Registered");}
+function register(){
+users.push({username:username.value,password:password.value});
+localStorage.setItem("users",JSON.stringify(users));
+alert("Registered");
+}
 
 function login(){
 let u=users.find(x=>x.username===username.value && x.password===password.value);
@@ -192,7 +204,6 @@ displayBoarding();displayCouncil();displayBOM();
 loadStudents();loadTeachers();
 }
 
-// NAV
 function showSection(s){
 ["students","teachers","staff","fees","boarding","council","bom"].forEach(sec=>{
 document.getElementById(sec+"Section").style.display="none";
@@ -202,43 +213,104 @@ document.getElementById(s+"Section").style.display="block";
 
 // STUDENTS
 let students=JSON.parse(localStorage.getItem("students"))||[];
+let editStudentIndex=-1;
+
 function addStudent(){
-students.push({name:s_name.value});
+let data={name:s_name.value,adm:s_adm.value,class:s_class.value,age:s_age.value,parent:s_parent.value};
+if(editStudentIndex==-1) students.push(data);
+else{students[editStudentIndex]=data;editStudentIndex=-1;}
 localStorage.setItem("students",JSON.stringify(students));
 displayStudents();loadStudents();
 }
+
 function displayStudents(){
 studentList.innerHTML="";
-students.forEach(s=>{
-studentList.innerHTML+=`<li>${s.name}</li>`;
+students.forEach((s,i)=>{
+studentList.innerHTML+=`
+<li>${s.name} (${s.adm})<br>
+${s.class} | Age:${s.age}<br>
+Parent:${s.parent}
+<button class="orange" onclick="editStudent(${i})">Edit</button>
+<button class="red" onclick="delStudent(${i})">Delete</button></li>`;
 });
+}
+
+function editStudent(i){
+let s=students[i];
+s_name.value=s.name;s_adm.value=s.adm;s_class.value=s.class;s_age.value=s.age;s_parent.value=s.parent;
+editStudentIndex=i;
+}
+
+function delStudent(i){
+students.splice(i,1);
+localStorage.setItem("students",JSON.stringify(students));
+displayStudents();loadStudents();
 }
 
 // TEACHERS
 let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
+let editTeacherIndex=-1;
+
 function addTeacher(){
-teachers.push({name:t_name.value});
+let data={
+name:t_name.value,
+role:t_role.value,
+class:t_class.value,
+subject:t_subject.value,
+department:t_department.value,
+phone:t_phone.value
+};
+
+if(editTeacherIndex==-1) teachers.push(data);
+else{teachers[editTeacherIndex]=data;editTeacherIndex=-1;}
+
 localStorage.setItem("teachers",JSON.stringify(teachers));
 displayTeachers();loadTeachers();
 }
+
 function displayTeachers(){
 teacherList.innerHTML="";
-teachers.forEach(t=>{
-teacherList.innerHTML+=`<li>${t.name}</li>`;
+teachers.forEach((t,i)=>{
+teacherList.innerHTML+=`
+<li>
+<b>${t.name}</b><br>
+Role:${t.role}<br>
+Class:${t.class}<br>
+Subject:${t.subject}<br>
+Dept:${t.department}<br>
+Phone:${t.phone}
+<button class="orange" onclick="editTeacher(${i})">Edit</button>
+<button class="red" onclick="delTeacher(${i})">Delete</button>
+</li>`;
 });
+}
+
+function editTeacher(i){
+let t=teachers[i];
+t_name.value=t.name;t_role.value=t.role;t_class.value=t.class;
+t_subject.value=t.subject;t_department.value=t.department;t_phone.value=t.phone;
+editTeacherIndex=i;
+}
+
+function delTeacher(i){
+teachers.splice(i,1);
+localStorage.setItem("teachers",JSON.stringify(teachers));
+displayTeachers();
 }
 
 // STAFF
 let staff=JSON.parse(localStorage.getItem("staff"))||[];
+
 function addStaff(){
-staff.push({name:st_name.value});
+staff.push({name:st_name.value,role:st_role.value,department:st_department.value,phone:st_phone.value});
 localStorage.setItem("staff",JSON.stringify(staff));
 displayStaff();
 }
+
 function displayStaff(){
 staffList.innerHTML="";
-staff.forEach(s=>{
-staffList.innerHTML+=`<li>${s.name}</li>`;
+staff.forEach((s,i)=>{
+staffList.innerHTML+=`<li>${s.name} - ${s.role} (${s.department})</li>`;
 });
 }
 
@@ -261,6 +333,7 @@ b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
 
 // FEES
 let fees=JSON.parse(localStorage.getItem("fees"))||[];
+
 function addFee(){
 let s=students[f_student.value];
 let paid=Number(f_paid.value);
@@ -269,6 +342,7 @@ fees.push({student:s.name,paid,balance});
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
 }
+
 function displayFees(){
 feeList.innerHTML="";
 let tp=0,tb=0;
@@ -282,6 +356,7 @@ totalBalance.innerText="Total Balance:"+tb;
 
 // BOARDING
 let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
+
 function addBoarding(){
 let s=students[b_student.value];
 let t=teachers[b_teacher.value];
@@ -289,21 +364,24 @@ boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
 localStorage.setItem("boarding",JSON.stringify(boarding));
 displayBoarding();
 }
+
 function displayBoarding(){
 boardingList.innerHTML="";
 boarding.forEach(b=>{
-boardingList.innerHTML+=`<li>${b.student} → ${b.dorm}</li>`;
+boardingList.innerHTML+=`<li>${b.student} → ${b.dorm} (Teacher:${b.teacher})</li>`;
 });
 }
 
 // COUNCIL
 let council=JSON.parse(localStorage.getItem("council"))||[];
+
 function addCouncil(){
 let s=students[c_student.value];
 council.push({student:s.name,position:c_position.value});
 localStorage.setItem("council",JSON.stringify(council));
 displayCouncil();
 }
+
 function displayCouncil(){
 councilList.innerHTML="";
 council.forEach(c=>{
@@ -315,11 +393,7 @@ councilList.innerHTML+=`<li>${c.student} - ${c.position}</li>`;
 let bom=JSON.parse(localStorage.getItem("bom"))||[];
 
 function addBOM(){
-bom.push({
-name:bom_name.value,
-position:bom_position.value,
-phone:bom_phone.value
-});
+bom.push({name:bom_name.value,position:bom_position.value,phone:bom_phone.value});
 localStorage.setItem("bom",JSON.stringify(bom));
 displayBOM();
 }
@@ -327,7 +401,7 @@ displayBOM();
 function displayBOM(){
 bomList.innerHTML="";
 bom.forEach(b=>{
-bomList.innerHTML+=`<li>${b.name} - ${b.position} (${b.phone})</li>`;
+bomList.innerHTML+=`<li>${b.name} - ${b.position}</li>`;
 });
 }
 </script>
