@@ -19,22 +19,18 @@
             text-align: center;
         }
 
-        .container {
-            padding: 20px;
-        }
-
         .card {
             background: white;
             padding: 15px;
-            margin: 10px auto;
+            margin: 15px auto;
             border-radius: 10px;
-            max-width: 600px;
+            max-width: 650px;
         }
 
         input {
             width: 95%;
             padding: 10px;
-            margin: 8px 0;
+            margin: 6px 0;
         }
 
         button {
@@ -86,24 +82,32 @@
         <button class="blue" onclick="exportPDF()">Export PDF</button>
     </div>
 
+    <!-- ADD STUDENT -->
     <div class="card">
         <h3>Add Student</h3>
         <input id="name" placeholder="Name">
         <input id="admission" placeholder="Admission No">
+        <input id="age" placeholder="Age">
+        <input id="class" placeholder="Class">
+        <input id="parent" placeholder="Parent Contact">
         <input type="file" id="photo">
+
         <button class="green" onclick="addStudent()">Add Student</button>
     </div>
 
+    <!-- SEARCH -->
     <div class="card">
         <h3>Search</h3>
         <input id="search" onkeyup="searchStudent()" placeholder="Search student">
     </div>
 
+    <!-- STUDENTS -->
     <div class="card">
         <h3>Students</h3>
         <ul id="studentList"></ul>
     </div>
 
+    <!-- CHANGE PASSWORD -->
     <div class="card">
         <h3>Change Password 🔑</h3>
         <input id="oldPass" type="password" placeholder="Old Password">
@@ -163,10 +167,7 @@ function changePassword() {
 
     let user = users.find(u => u.username === currentUser);
 
-    if (user.password !== oldP) {
-        alert("Wrong old password");
-        return;
-    }
+    if (user.password !== oldP) return alert("Wrong old password");
 
     user.password = newP;
     localStorage.setItem("users", JSON.stringify(users));
@@ -186,26 +187,39 @@ function getBase64(file, cb) {
 function addStudent() {
     let n = name.value;
     let a = admission.value;
+    let ageVal = age.value;
+    let c = document.getElementById("class").value;
+    let p = parent.value;
     let f = photo.files[0];
 
-    if (!n || !a) return alert("Fill fields");
+    if (!n || !a) return alert("Fill required fields");
 
     if (f) {
-        getBase64(f, img => saveStudent(n, a, img));
+        getBase64(f, img => saveStudent(n, a, ageVal, c, p, img));
     } else {
-        saveStudent(n, a, "");
+        saveStudent(n, a, ageVal, c, p, "");
     }
 }
 
-function saveStudent(n, a, img) {
+function saveStudent(n, a, ageVal, c, p, img) {
+    let studentData = {
+        name: n,
+        admission: a,
+        age: ageVal,
+        class: c,
+        parent: p,
+        photo: img
+    };
+
     if (editIndex === -1) {
-        students.push({ name: n, admission: a, photo: img });
+        students.push(studentData);
     } else {
-        students[editIndex] = { name: n, admission: a, photo: img };
+        students[editIndex] = studentData;
         editIndex = -1;
     }
 
     localStorage.setItem("students", JSON.stringify(students));
+    clearForm();
     displayStudents();
 }
 
@@ -217,8 +231,9 @@ function displayStudents() {
 
         li.innerHTML = `
             <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
-            ${s.name} - ${s.admission}
-            <br>
+            <b>${s.name}</b> (${s.admission})<br>
+            Age: ${s.age || '-'} | Class: ${s.class || '-'}<br>
+            Parent: ${s.parent || '-'}<br>
             <button class="orange" onclick="editStudent(${i})">Edit</button>
             <button class="red" onclick="deleteStudent(${i})">Delete</button>
         `;
@@ -228,8 +243,12 @@ function displayStudents() {
 }
 
 function editStudent(i) {
-    name.value = students[i].name;
-    admission.value = students[i].admission;
+    let s = students[i];
+    name.value = s.name;
+    admission.value = s.admission;
+    age.value = s.age;
+    document.getElementById("class").value = s.class;
+    parent.value = s.parent;
     editIndex = i;
 }
 
@@ -253,14 +272,24 @@ function searchStudent() {
 
             li.innerHTML = `
                 <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
-                ${s.name} - ${s.admission}
-                <br>
+                <b>${s.name}</b> (${s.admission})<br>
+                Age: ${s.age || '-'} | Class: ${s.class || '-'}<br>
+                Parent: ${s.parent || '-'}<br>
                 <button class="orange" onclick="editStudent(${i})">Edit</button>
                 <button class="red" onclick="deleteStudent(${i})">Delete</button>
             `;
 
             studentList.appendChild(li);
         });
+}
+
+function clearForm() {
+    name.value = "";
+    admission.value = "";
+    age.value = "";
+    document.getElementById("class").value = "";
+    parent.value = "";
+    photo.value = "";
 }
 
 // PDF
@@ -271,8 +300,13 @@ function exportPDF() {
     doc.text("Student List", 20, 20);
 
     let y = 30;
+
     students.forEach((s, i) => {
-        doc.text(`${i+1}. ${s.name} - ${s.admission}`, 20, y);
+        doc.text(
+            `${i+1}. ${s.name} | Adm: ${s.admission} | Age: ${s.age} | Class: ${s.class} | Parent: ${s.parent}`,
+            10,
+            y
+        );
         y += 10;
     });
 
