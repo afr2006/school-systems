@@ -32,17 +32,19 @@
             border: none;
             cursor: pointer;
             color: white;
+            border-radius: 5px;
         }
 
         .add-btn { background: green; }
         .load-btn { background: blue; }
         .delete-btn { background: red; }
+        .edit-btn { background: orange; }
         .logout-btn { background: black; }
 
         table {
             margin: auto;
             border-collapse: collapse;
-            width: 80%;
+            width: 90%;
             background: white;
         }
 
@@ -67,7 +69,7 @@
     <h2>School Management System</h2>
 </header>
 
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 <div id="loginPage" class="container">
     <h3>Login</h3>
     <input type="text" id="username" placeholder="Username"><br>
@@ -75,14 +77,17 @@
     <button onclick="login()">Login</button>
 </div>
 
-<!-- APP PAGE -->
+<!-- APP -->
 <div id="appPage" class="container">
-    <button class="logout-btn" onclick="logout()">Logout</button><br><br>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <h3>Student Management</h3>
 
     <input type="text" id="name" placeholder="Student Name">
     <input type="number" id="age" placeholder="Age"><br>
 
-    <button class="add-btn" onclick="addStudent()">Add Student</button>
+    <button class="add-btn" onclick="addOrUpdateStudent()">Save Student</button>
     <button class="load-btn" onclick="loadStudents()">Load Students</button>
 
     <br><br>
@@ -92,19 +97,20 @@
             <tr>
                 <th>Name</th>
                 <th>Age</th>
-                <th>Action</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody id="studentList"></tbody>
     </table>
+
 </div>
 
 <script>
-    // Default login
     const USER = "admin";
     const PASS = "1234";
 
-    // Show login first
+    let editIndex = -1;
+
     document.getElementById("loginPage").style.display = "block";
 
     function login() {
@@ -125,7 +131,7 @@
         document.getElementById("loginPage").style.display = "block";
     }
 
-    function addStudent() {
+    function addOrUpdateStudent() {
         let name = document.getElementById("name").value;
         let age = document.getElementById("age").value;
 
@@ -136,7 +142,12 @@
 
         let students = JSON.parse(localStorage.getItem("students")) || [];
 
-        students.push({ name, age });
+        if (editIndex === -1) {
+            students.push({ name, age });
+        } else {
+            students[editIndex] = { name, age };
+            editIndex = -1;
+        }
 
         localStorage.setItem("students", JSON.stringify(students));
 
@@ -158,6 +169,7 @@
                     <td>${student.name}</td>
                     <td>${student.age}</td>
                     <td>
+                        <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
                         <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
                     </td>
                 </tr>
@@ -165,14 +177,23 @@
         });
     }
 
+    function editStudent(index) {
+        let students = JSON.parse(localStorage.getItem("students")) || [];
+
+        document.getElementById("name").value = students[index].name;
+        document.getElementById("age").value = students[index].age;
+
+        editIndex = index;
+    }
+
     function deleteStudent(index) {
         let students = JSON.parse(localStorage.getItem("students")) || [];
 
-        students.splice(index, 1);
-
-        localStorage.setItem("students", JSON.stringify(students));
-
-        loadStudents();
+        if (confirm("Delete this student?")) {
+            students.splice(index, 1);
+            localStorage.setItem("students", JSON.stringify(students));
+            loadStudents();
+        }
     }
 </script>
 
