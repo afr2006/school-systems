@@ -6,7 +6,7 @@
 <style>
 body{font-family:Arial;margin:0;background:#eef1f5;}
 .header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.nav{display:flex;justify-content:center;background:#34495e;flex-wrap:wrap;}
+.nav{display:flex;flex-wrap:wrap;justify-content:center;background:#34495e;}
 .nav button{color:white;background:none;border:none;padding:10px;cursor:pointer;}
 .card{background:white;margin:15px auto;padding:15px;max-width:750px;border-radius:10px;}
 input,select{width:95%;padding:10px;margin:5px 0;}
@@ -22,7 +22,7 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <body>
 
-<div class="header">🏫 School Management System</div>
+<div class="header">🏫 Boarding School System</div>
 
 <!-- AUTH -->
 <div class="card" id="authBox">
@@ -38,8 +38,9 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div class="nav">
 <button onclick="showSection('students')">Students</button>
 <button onclick="showSection('teachers')">Teachers</button>
-<button onclick="showSection('staff')">Non-Teaching Staff</button>
+<button onclick="showSection('staff')">Staff</button>
 <button onclick="showSection('fees')">Fees</button>
+<button onclick="showSection('boarding')">Boarding</button>
 </div>
 
 <div class="card">
@@ -49,7 +50,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <!-- STUDENTS -->
 <div id="studentsSection">
 <div class="card">
-<h3>Add / Edit Student</h3>
 <input id="s_name" placeholder="Name">
 <input id="s_adm" placeholder="Admission No">
 <input id="s_class" placeholder="Class">
@@ -63,7 +63,6 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <!-- TEACHERS -->
 <div id="teachersSection" style="display:none;">
 <div class="card">
-<h3>Add / Edit Teacher</h3>
 <input id="t_name" placeholder="Name">
 <input id="t_subject" placeholder="Subject">
 <select id="t_department">
@@ -79,12 +78,11 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 <div class="card"><ul id="teacherList"></ul></div>
 </div>
 
-<!-- NON-TEACHING STAFF -->
+<!-- STAFF -->
 <div id="staffSection" style="display:none;">
 <div class="card">
-<h3>Add / Edit Staff</h3>
 <input id="st_name" placeholder="Name">
-<input id="st_role" placeholder="Role (e.g Cleaner)">
+<input id="st_role" placeholder="Role">
 <select id="st_department">
 <option>Administration</option>
 <option>Finance</option>
@@ -112,6 +110,30 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 </div>
 </div>
 
+<!-- BOARDING -->
+<div id="boardingSection" style="display:none;">
+<div class="card">
+<h3>Assign Boarding</h3>
+
+<select id="b_student"></select>
+
+<select id="b_dorm">
+<option>Simba</option>
+<option>Chui</option>
+<option>Tembo</option>
+<option>Ndovu</option>
+</select>
+
+<select id="b_teacher"></select>
+
+<button class="green" onclick="addBoarding()">Assign</button>
+</div>
+
+<div class="card">
+<ul id="boardingList"></ul>
+</div>
+</div>
+
 </div>
 
 <script>
@@ -120,22 +142,22 @@ let users=JSON.parse(localStorage.getItem("users"))||[];
 let currentUser=localStorage.getItem("currentUser");
 if(currentUser) showSystem();
 
-function register(){
-if(!username.value||!password.value)return alert("Fill fields");
-users.push({username:username.value,password:password.value});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Registered");
-}
+function register(){users.push({username:username.value,password:password.value});
+localStorage.setItem("users",JSON.stringify(users));alert("Registered");}
+
 function login(){
 let u=users.find(x=>x.username===username.value && x.password===password.value);
 if(u){localStorage.setItem("currentUser",username.value);showSystem();}
 else alert("Wrong login");
 }
+
 function logout(){localStorage.removeItem("currentUser");location.reload();}
+
 function showSystem(){
 authBox.style.display="none";
 systemBox.style.display="block";
-displayStudents();displayTeachers();displayStaff();displayFees();loadStudents();
+displayStudents();displayTeachers();displayStaff();displayFees();displayBoarding();
+loadStudents();loadTeachers();
 }
 
 // NAV
@@ -144,124 +166,74 @@ studentsSection.style.display="none";
 teachersSection.style.display="none";
 staffSection.style.display="none";
 feesSection.style.display="none";
+boardingSection.style.display="none";
 document.getElementById(s+"Section").style.display="block";
 }
 
 // STUDENTS
 let students=JSON.parse(localStorage.getItem("students"))||[];
-let editStudentIndex=-1;
-
 function addStudent(){
-let data={name:s_name.value,adm:s_adm.value,class:s_class.value,age:s_age.value,parent:s_parent.value};
-if(editStudentIndex==-1)students.push(data);
-else{students[editStudentIndex]=data;editStudentIndex=-1;}
+students.push({name:s_name.value,adm:s_adm.value,class:s_class.value,age:s_age.value,parent:s_parent.value});
 localStorage.setItem("students",JSON.stringify(students));
-displayStudents();loadStudents();clearStudent();
+displayStudents();loadStudents();
 }
 function displayStudents(){
 studentList.innerHTML="";
 students.forEach((s,i)=>{
-studentList.innerHTML+=`<li>${s.name} (${s.adm})<br>${s.class} | ${s.age}<br>${s.parent}
-<button class="orange" onclick="editStudent(${i})">Edit</button>
-<button class="red" onclick="delStudent(${i})">Delete</button></li>`;
+studentList.innerHTML+=`<li>${s.name} (${s.adm})</li>`;
 });
 }
-function editStudent(i){
-let s=students[i];
-s_name.value=s.name;s_adm.value=s.adm;s_class.value=s.class;s_age.value=s.age;s_parent.value=s.parent;
-editStudentIndex=i;
-}
-function delStudent(i){
-students.splice(i,1);
-localStorage.setItem("students",JSON.stringify(students));
-displayStudents();loadStudents();
-}
-function clearStudent(){s_name.value="";s_adm.value="";s_class.value="";s_age.value="";s_parent.value="";}
 
 // TEACHERS
 let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
-let editTeacherIndex=-1;
-
 function addTeacher(){
-let data={name:t_name.value,subject:t_subject.value,department:t_department.value,phone:t_phone.value};
-if(editTeacherIndex==-1)teachers.push(data);
-else{teachers[editTeacherIndex]=data;editTeacherIndex=-1;}
+teachers.push({name:t_name.value,subject:t_subject.value});
 localStorage.setItem("teachers",JSON.stringify(teachers));
-displayTeachers();clearTeacher();
+displayTeachers();loadTeachers();
 }
 function displayTeachers(){
 teacherList.innerHTML="";
 teachers.forEach((t,i)=>{
-teacherList.innerHTML+=`<li>${t.name}<br>${t.subject} | ${t.department}<br>${t.phone}
-<button class="orange" onclick="editTeacher(${i})">Edit</button>
-<button class="red" onclick="delTeacher(${i})">Delete</button></li>`;
+teacherList.innerHTML+=`<li>${t.name}</li>`;
 });
 }
-function editTeacher(i){
-let t=teachers[i];
-t_name.value=t.name;t_subject.value=t.subject;t_department.value=t.department;t_phone.value=t.phone;
-editTeacherIndex=i;
-}
-function delTeacher(i){
-teachers.splice(i,1);
-localStorage.setItem("teachers",JSON.stringify(teachers));
-displayTeachers();
-}
-function clearTeacher(){t_name.value="";t_subject.value="";t_phone.value="";}
 
 // STAFF
 let staff=JSON.parse(localStorage.getItem("staff"))||[];
-let editStaffIndex=-1;
-
 function addStaff(){
-let data={name:st_name.value,role:st_role.value,department:st_department.value,phone:st_phone.value};
-if(editStaffIndex==-1)staff.push(data);
-else{staff[editStaffIndex]=data;editStaffIndex=-1;}
+staff.push({name:st_name.value});
 localStorage.setItem("staff",JSON.stringify(staff));
-displayStaff();clearStaff();
+displayStaff();
 }
 function displayStaff(){
 staffList.innerHTML="";
 staff.forEach((s,i)=>{
-staffList.innerHTML+=`<li>${s.name}<br>${s.role} | ${s.department}<br>${s.phone}
-<button class="orange" onclick="editStaff(${i})">Edit</button>
-<button class="red" onclick="delStaff(${i})">Delete</button></li>`;
+staffList.innerHTML+=`<li>${s.name}</li>`;
 });
 }
-function editStaff(i){
-let s=staff[i];
-st_name.value=s.name;st_role.value=s.role;st_department.value=s.department;st_phone.value=s.phone;
-editStaffIndex=i;
-}
-function delStaff(i){
-staff.splice(i,1);
-localStorage.setItem("staff",JSON.stringify(staff));
-displayStaff();
-}
-function clearStaff(){st_name.value="";st_role.value="";st_phone.value="";}
 
 // FEES
 let fees=JSON.parse(localStorage.getItem("fees"))||[];
-let editFeeIndex=-1;
-
 function loadStudents(){
-f_student.innerHTML="";
+f_student.innerHTML="";b_student.innerHTML="";
 students.forEach((s,i)=>{
 f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+b_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
+});
+}
+
+function loadTeachers(){
+b_teacher.innerHTML="";
+teachers.forEach((t,i)=>{
+b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
 });
 }
 
 function addFee(){
 let student=students[f_student.value];
 let paid=Number(f_paid.value);
-let total=10000;
-let balance=total-paid;
-
-let data={student:student.name,paid,balance};
-
-if(editFeeIndex==-1)fees.push(data);
-else{fees[editFeeIndex]=data;editFeeIndex=-1;}
-
+let balance=10000-paid;
+fees.push({student:student.name,paid,balance});
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
 }
@@ -269,28 +241,40 @@ displayFees();
 function displayFees(){
 feeList.innerHTML="";
 let tp=0,tb=0;
-
-fees.forEach((f,i)=>{
+fees.forEach((f)=>{
 tp+=f.paid;tb+=f.balance;
+feeList.innerHTML+=`<li>${f.student} Paid:${f.paid}</li>`;
+});
+totalPaid.innerText="Total Paid:"+tp;
+totalBalance.innerText="Total Balance:"+tb;
+}
 
-feeList.innerHTML+=`<li>${f.student} - Paid:${f.paid} | Balance:${f.balance}
-<button class="orange" onclick="editFee(${i})">Edit</button>
-<button class="red" onclick="delFee(${i})">Delete</button></li>`;
+// BOARDING
+let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
+
+function addBoarding(){
+let s=students[b_student.value];
+let t=teachers[b_teacher.value];
+
+boarding.push({
+student:s.name,
+dorm:b_dorm.value,
+teacher:t.name
 });
 
-totalPaid.innerText="Total Paid: "+tp;
-totalBalance.innerText="Total Balance: "+tb;
+localStorage.setItem("boarding",JSON.stringify(boarding));
+displayBoarding();
 }
 
-function editFee(i){
-f_paid.value=fees[i].paid;
-editFeeIndex=i;
-}
-
-function delFee(i){
-fees.splice(i,1);
-localStorage.setItem("fees",JSON.stringify(fees));
-displayFees();
+function displayBoarding(){
+boardingList.innerHTML="";
+boarding.forEach((b,i)=>{
+boardingList.innerHTML+=`
+<li>
+${b.student} → Dorm: ${b.dorm}<br>
+Teacher in Charge: ${b.teacher}
+</li>`;
+});
 }
 </script>
 
