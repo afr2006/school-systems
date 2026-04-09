@@ -193,7 +193,9 @@ function viewStudents() {
     let output = "";
 
     students.forEach((s, index) => {
-        output += (index + 1) + ". " + s.name + " - Age: " + s.age + "<br>";
+        output += (index + 1) + ". " + s.name + 
+        " - Age: " + s.age + 
+        ` <button onclick="deleteStudent(${index})">Delete</button><br>`;
     });
 
     if(output === ""){
@@ -201,6 +203,18 @@ function viewStudents() {
     }
 
     document.getElementById("studentList").innerHTML = output;
+}
+
+function deleteStudent(index) {
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+
+    students.splice(index, 1);
+
+    localStorage.setItem("students", JSON.stringify(students));
+
+    alert("Student deleted!");
+
+    viewStudents(); // refresh list
 }
 </script>
 
