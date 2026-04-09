@@ -2,145 +2,178 @@
 <html>
 <head>
     <title>School Management System</title>
-
     <style>
         body {
             margin: 0;
             font-family: Arial;
             background: #eef2f7;
-            text-align: center;
         }
 
         header {
             background: linear-gradient(90deg, #4CAF50, #2E7D32);
             color: white;
             padding: 15px;
-            font-size: 22px;
-            font-weight: bold;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            text-align: center;
         }
 
         input {
             padding: 10px;
-            margin: 10px;
+            margin: 5px;
             width: 150px;
         }
 
         button {
             padding: 10px 15px;
             border: none;
-            color: white;
             cursor: pointer;
+            color: white;
         }
 
-        .add-btn {
-            background: green;
-        }
-
-        .load-btn {
-            background: blue;
-        }
+        .add-btn { background: green; }
+        .load-btn { background: blue; }
+        .delete-btn { background: red; }
+        .logout-btn { background: black; }
 
         table {
-            width: 80%;
-            margin: 20px auto;
+            margin: auto;
             border-collapse: collapse;
+            width: 80%;
             background: white;
         }
 
         th, td {
-            border: 1px solid #ccc;
             padding: 10px;
+            border: 1px solid #ccc;
         }
 
         th {
             background: #ddd;
         }
 
-        .delete-btn {
-            background: red;
+        #loginPage, #appPage {
+            display: none;
         }
     </style>
 </head>
 
 <body>
 
-<header>School Management System</header>
+<header>
+    <h2>School Management System</h2>
+</header>
 
-<br>
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="container">
+    <h3>Login</h3>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+</div>
 
-<input type="text" id="name" placeholder="Student Name">
-<input type="number" id="age" placeholder="Age">
+<!-- APP PAGE -->
+<div id="appPage" class="container">
+    <button class="logout-btn" onclick="logout()">Logout</button><br><br>
 
-<br>
+    <input type="text" id="name" placeholder="Student Name">
+    <input type="number" id="age" placeholder="Age"><br>
 
-<button class="add-btn" onclick="addStudent()">Add Student</button>
-<button class="load-btn" onclick="loadStudents()">Load Students</button>
+    <button class="add-btn" onclick="addStudent()">Add Student</button>
+    <button class="load-btn" onclick="loadStudents()">Load Students</button>
 
-<table id="studentTable">
-    <tr>
-        <th>Name</th>
-        <th>Age</th>
-        <th>Action</th>
-    </tr>
-</table>
+    <br><br>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="studentList"></tbody>
+    </table>
+</div>
 
 <script>
-let students = JSON.parse(localStorage.getItem("students")) || [];
+    // Default login
+    const USER = "admin";
+    const PASS = "1234";
 
-// ADD STUDENT
-function addStudent() {
-    let name = document.getElementById("name").value;
-    let age = document.getElementById("age").value;
+    // Show login first
+    document.getElementById("loginPage").style.display = "block";
 
-    if (name === "" || age === "") {
-        alert("Please fill all fields");
-        return;
+    function login() {
+        let u = document.getElementById("username").value;
+        let p = document.getElementById("password").value;
+
+        if (u === USER && p === PASS) {
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("appPage").style.display = "block";
+            loadStudents();
+        } else {
+            alert("Wrong login details");
+        }
     }
 
-    students.push({ name, age });
-    localStorage.setItem("students", JSON.stringify(students));
+    function logout() {
+        document.getElementById("appPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "block";
+    }
 
-    alert("Student Added!");
+    function addStudent() {
+        let name = document.getElementById("name").value;
+        let age = document.getElementById("age").value;
 
-    document.getElementById("name").value = "";
-    document.getElementById("age").value = "";
-}
+        if (name === "" || age === "") {
+            alert("Fill all fields");
+            return;
+        }
 
-// LOAD STUDENTS
-function loadStudents() {
-    let table = document.getElementById("studentTable");
+        let students = JSON.parse(localStorage.getItem("students")) || [];
 
-    table.innerHTML = `
-        <tr>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Action</th>
-        </tr>
-    `;
+        students.push({ name, age });
 
-    students = JSON.parse(localStorage.getItem("students")) || [];
+        localStorage.setItem("students", JSON.stringify(students));
 
-    students.forEach((student, index) => {
-        let row = table.insertRow();
+        document.getElementById("name").value = "";
+        document.getElementById("age").value = "";
 
-        row.insertCell(0).innerText = student.name;
-        row.insertCell(1).innerText = student.age;
+        loadStudents();
+    }
 
-        let actionCell = row.insertCell(2);
-        actionCell.innerHTML = `
-            <button class="delete-btn" onclick="deleteStudent(${index})">
-                Delete
-            </button>
-        `;
-    });
-}
+    function loadStudents() {
+        let students = JSON.parse(localStorage.getItem("students")) || [];
+        let table = document.getElementById("studentList");
 
-// DELETE STUDENT
-function deleteStudent(index) {
-    students.splice(index, 1);
-    localStorage.setItem("students", JSON.stringify(students));
-    loadStudents();
-}
+        table.innerHTML = "";
+
+        students.forEach((student, index) => {
+            table.innerHTML += `
+                <tr>
+                    <td>${student.name}</td>
+                    <td>${student.age}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function deleteStudent(index) {
+        let students = JSON.parse(localStorage.getItem("students")) || [];
+
+        students.splice(index, 1);
+
+        localStorage.setItem("students", JSON.stringify(students));
+
+        loadStudents();
+    }
 </script>
 
 </body>
