@@ -1,139 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>School System (Offline)</title>
-    <style>
-        body { font-family: Arial; background:#f4f4f4; text-align:center; }
-        .container { width:90%; max-width:500px; margin:auto; background:white; padding:20px; margin-top:30px; border-radius:10px; }
-        input { width:90%; padding:10px; margin:5px; }
-        button { padding:10px; margin:5px; cursor:pointer; }
-        .hidden { display:none; }
-        .delete { background:red; color:white; }
-        .edit { background:orange; color:white; }
-        .logout { background:black; color:white; }
-    </style>
+<meta charset="UTF-8">
+<title>Student System</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f2f2f2;
+    text-align: center;
+}
+
+.container {
+    width: 350px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+input {
+    width: 90%;
+    padding: 8px;
+    margin: 5px;
+}
+
+button {
+    padding: 6px 10px;
+    margin: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.add-btn { background: #4CAF50; color: white; }
+.edit-btn { background: orange; color: white; }
+.delete-btn { background: red; color: white; }
+
+li {
+    text-align: left;
+    margin: 10px 0;
+}
+</style>
 </head>
+
 <body>
 
-<div class="container" id="auth">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
-</div>
-
-<div class="container hidden" id="app">
+<div class="container">
     <h2>Student System</h2>
 
     <input type="text" id="name" placeholder="Student Name">
-    <input type="text" id="adm" placeholder="Admission No">
-    <button onclick="addStudent()">Add Student</button>
+    <input type="number" id="adm" placeholder="Admission No">
+    <br>
+    <button class="add-btn" onclick="addStudent()">Add Student</button>
+
+    <br><br>
+    <input type="text" id="search" placeholder="Search student..." onkeyup="searchStudent()">
 
     <h3>Students</h3>
     <ul id="list"></ul>
-
-    <button class="logout" onclick="logout()">Logout</button>
 </div>
 
 <script>
-    let editIndex = -1;
+let students = JSON.parse(localStorage.getItem("students")) || [];
 
-    function register() {
-        let email = document.getElementById("email").value;
-        let password = document.getElementById("password").value;
+function saveData() {
+    localStorage.setItem("students", JSON.stringify(students));
+}
 
-        if (!email || !password) return alert("Fill all fields");
+function addStudent() {
+    let name = document.getElementById("name").value;
+    let adm = document.getElementById("adm").value;
 
-        localStorage.setItem("user", JSON.stringify({email, password}));
-        alert("Registered successfully!");
+    if(name === "" || adm === "") {
+        alert("Fill all fields!");
+        return;
     }
 
-    function login() {
-        let email = document.getElementById("email").value;
-        let password = document.getElementById("password").value;
+    students.push({name, adm});
+    saveData();
+    displayStudents();
 
-        let user = JSON.parse(localStorage.getItem("user"));
+    document.getElementById("name").value = "";
+    document.getElementById("adm").value = "";
+}
 
-        if (!user || user.email !== email || user.password !== password) {
-            alert("Wrong login details");
-            return;
-        }
+function displayStudents(filtered = students) {
+    let list = document.getElementById("list");
+    list.innerHTML = "";
 
-        document.getElementById("auth").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
+    filtered.forEach((student, index) => {
+        let li = document.createElement("li");
 
-        loadStudents();
-    }
+        li.innerHTML = `
+            ${student.name} - ${student.adm}
+            <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+        `;
 
-    function logout() {
-        location.reload();
-    }
+        list.appendChild(li);
+    });
+}
 
-    function getStudents() {
-        return JSON.parse(localStorage.getItem("students")) || [];
-    }
-
-    function saveStudents(students) {
-        localStorage.setItem("students", JSON.stringify(students));
-    }
-
-    function addStudent() {
-        let name = document.getElementById("name").value;
-        let adm = document.getElementById("adm").value;
-
-        if (!name || !adm) return alert("Fill all fields");
-
-        let students = getStudents();
-
-        if (editIndex === -1) {
-            students.push({name, adm});
-        } else {
-            students[editIndex] = {name, adm};
-            editIndex = -1;
-        }
-
-        saveStudents(students);
-        document.getElementById("name").value = "";
-        document.getElementById("adm").value = "";
-
-        loadStudents();
-    }
-
-    function loadStudents() {
-        let list = document.getElementById("list");
-        list.innerHTML = "";
-
-        let students = getStudents();
-
-        students.forEach((s, index) => {
-            let li = document.createElement("li");
-
-            li.innerHTML = `
-                ${s.name} - ${s.adm}
-                <button class="edit" onclick="editStudent(${index})">Edit</button>
-                <button class="delete" onclick="deleteStudent(${index})">Delete</button>
-            `;
-
-            list.appendChild(li);
-        });
-    }
-
-    function deleteStudent(index) {
-        let students = getStudents();
+function deleteStudent(index) {
+    if(confirm("Are you sure you want to delete?")) {
         students.splice(index, 1);
-        saveStudents(students);
-        loadStudents();
+        saveData();
+        displayStudents();
     }
+}
 
-    function editStudent(index) {
-        let students = getStudents();
+function editStudent(index) {
+    let newName = prompt("Edit Name:", students[index].name);
+    let newAdm = prompt("Edit Admission No:", students[index].adm);
 
-        document.getElementById("name").value = students[index].name;
-        document.getElementById("adm").value = students[index].adm;
-
-        editIndex = index;
+    if(newName && newAdm) {
+        students[index] = {name: newName, adm: newAdm};
+        saveData();
+        displayStudents();
     }
+}
+
+function searchStudent() {
+    let value = document.getElementById("search").value.toLowerCase();
+
+    let filtered = students.filter(s =>
+        s.name.toLowerCase().includes(value) ||
+        s.adm.includes(value)
+    );
+
+    displayStudents(filtered);
+}
+
+// Load data on start
+displayStudents();
 </script>
 
 </body>
