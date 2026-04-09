@@ -2,10 +2,11 @@
 <html>
 <head>
     <title>School Management System</title>
+
     <style>
         body {
-            margin: 0;
             font-family: Arial;
+            margin: 0;
             background: #eef2f7;
         }
 
@@ -18,47 +19,31 @@
 
         .container {
             padding: 20px;
-            text-align: center;
         }
 
         input {
             padding: 10px;
             margin: 5px;
-            width: 150px;
+            width: 90%;
         }
 
         button {
-            padding: 10px 15px;
+            padding: 10px;
+            margin: 5px;
             border: none;
             cursor: pointer;
             color: white;
-            border-radius: 5px;
         }
 
-        .add-btn { background: green; }
-        .load-btn { background: blue; }
+        .login-btn { background: #2196F3; }
+        .add-btn { background: #4CAF50; }
         .delete-btn { background: red; }
-        .edit-btn { background: orange; }
-        .logout-btn { background: black; }
 
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 90%;
+        .card {
             background: white;
-        }
-
-        th, td {
             padding: 10px;
-            border: 1px solid #ccc;
-        }
-
-        th {
-            background: #ddd;
-        }
-
-        #loginPage, #appPage {
-            display: none;
+            margin-top: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -69,132 +54,110 @@
     <h2>School Management System</h2>
 </header>
 
-<!-- LOGIN -->
-<div id="loginPage" class="container">
-    <h3>Login</h3>
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-</div>
+<div class="container">
 
-<!-- APP -->
-<div id="appPage" class="container">
+    <!-- LOGIN -->
+    <div id="loginPage">
+        <h3>Login</h3>
+        <input type="text" id="username" placeholder="Username"><br>
+        <input type="password" id="password" placeholder="Password"><br>
+        <button class="login-btn" onclick="login()">Login</button>
+    </div>
 
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <!-- DASHBOARD -->
+    <div id="dashboard" style="display:none;">
+        <h3>Dashboard</h3>
 
-    <h3>Student Management</h3>
+        <input type="text" id="adm" placeholder="Admission Number"><br>
+        <input type="text" id="name" placeholder="Student Name"><br>
+        <input type="text" id="class" placeholder="Class"><br>
 
-    <input type="text" id="name" placeholder="Student Name">
-    <input type="number" id="age" placeholder="Age"><br>
+        <button class="add-btn" onclick="addStudent()">Add Student</button>
 
-    <button class="add-btn" onclick="addOrUpdateStudent()">Save Student</button>
-    <button class="load-btn" onclick="loadStudents()">Load Students</button>
-
-    <br><br>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="studentList"></tbody>
-    </table>
+        <h3>Students</h3>
+        <div id="students"></div>
+    </div>
 
 </div>
 
-<script>
-    const USER = "admin";
-    const PASS = "1234";
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    let editIndex = -1;
+const firebaseConfig = {
+    apiKey: "YOUR-API-KEY",
+    authDomain: "YOUR-PROJECT-ID.firebaseapp.com",
+    projectId: "YOUR-PROJECT-ID",
+    storageBucket: "YOUR-PROJECT-ID.appspot.com",
+    messagingSenderId: "XXXX",
+    appId: "XXXX"
+};
 
-    document.getElementById("loginPage").style.display = "block";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    function login() {
-        let u = document.getElementById("username").value;
-        let p = document.getElementById("password").value;
+// LOGIN SYSTEM
+window.login = function() {
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
 
-        if (u === USER && p === PASS) {
-            document.getElementById("loginPage").style.display = "none";
-            document.getElementById("appPage").style.display = "block";
-            loadStudents();
-        } else {
-            alert("Wrong login details");
-        }
-    }
-
-    function logout() {
-        document.getElementById("appPage").style.display = "none";
-        document.getElementById("loginPage").style.display = "block";
-    }
-
-    function addOrUpdateStudent() {
-        let name = document.getElementById("name").value;
-        let age = document.getElementById("age").value;
-
-        if (name === "" || age === "") {
-            alert("Fill all fields");
-            return;
-        }
-
-        let students = JSON.parse(localStorage.getItem("students")) || [];
-
-        if (editIndex === -1) {
-            students.push({ name, age });
-        } else {
-            students[editIndex] = { name, age };
-            editIndex = -1;
-        }
-
-        localStorage.setItem("students", JSON.stringify(students));
-
-        document.getElementById("name").value = "";
-        document.getElementById("age").value = "";
-
+    if (user === "admin" && pass === "1234") {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
         loadStudents();
+    } else {
+        alert("Wrong login details");
+    }
+}
+
+// ADD STUDENT
+window.addStudent = async function() {
+    let adm = document.getElementById("adm").value;
+    let name = document.getElementById("name").value;
+    let cls = document.getElementById("class").value;
+
+    if (adm === "" || name === "" || cls === "") {
+        alert("Fill all fields");
+        return;
     }
 
-    function loadStudents() {
-        let students = JSON.parse(localStorage.getItem("students")) || [];
-        let table = document.getElementById("studentList");
+    await addDoc(collection(db, "students"), {
+        adm: adm,
+        name: name,
+        class: cls
+    });
 
-        table.innerHTML = "";
+    alert("Student Added");
+    loadStudents();
+}
 
-        students.forEach((student, index) => {
-            table.innerHTML += `
-                <tr>
-                    <td>${student.name}</td>
-                    <td>${student.age}</td>
-                    <td>
-                        <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
-                        <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
+// LOAD STUDENTS
+async function loadStudents() {
+    const querySnapshot = await getDocs(collection(db, "students"));
+    let output = "";
 
-    function editStudent(index) {
-        let students = JSON.parse(localStorage.getItem("students")) || [];
+    querySnapshot.forEach((docSnap) => {
+        let data = docSnap.data();
 
-        document.getElementById("name").value = students[index].name;
-        document.getElementById("age").value = students[index].age;
+        output += `
+            <div class="card">
+                <b>${data.name}</b><br>
+                Adm: ${data.adm}<br>
+                Class: ${data.class}<br>
+                <button class="delete-btn" onclick="deleteStudent('${docSnap.id}')">Delete</button>
+            </div>
+        `;
+    });
 
-        editIndex = index;
-    }
+    document.getElementById("students").innerHTML = output;
+}
 
-    function deleteStudent(index) {
-        let students = JSON.parse(localStorage.getItem("students")) || [];
-
-        if (confirm("Delete this student?")) {
-            students.splice(index, 1);
-            localStorage.setItem("students", JSON.stringify(students));
-            loadStudents();
-        }
-    }
+// DELETE STUDENT
+window.deleteStudent = async function(id) {
+    await deleteDoc(doc(db, "students", id));
+    loadStudents();
+}
 </script>
 
 </body>
