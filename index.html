@@ -1,245 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My School System</title>
-
+    <title>School Management System</title>
     <style>
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             background: #eef2f7;
-        }
-
-        /* LOGIN SCREEN */
-        .login-screen {
-            display: flex;
-            height: 100vh;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .login-box input {
-            padding: 10px;
-            margin: 10px;
-            width: 200px;
-        }
-
-        .login-box button {
-            padding: 10px 20px;
+        h1 {
             background: #4CAF50;
             color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* MAIN SYSTEM (HIDDEN FIRST) */
-        #mainSystem {
-            display: none;
-        }
-
-        header {
-            background: linear-gradient(90deg, #4CAF50, #2E7D32);
-            color: white;
             padding: 15px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            background: #388E3C;
-            padding: 10px;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .logout-btn {
-            background: red;
-            color: white;
-            padding: 5px 10px;
-            float: right;
-            margin-right: 10px;
-            cursor: pointer;
-        }
-
-        .container {
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .student-section {
-            text-align: center;
         }
 
         input {
-            padding: 8px;
+            padding: 10px;
+            margin: 5px;
             width: 200px;
         }
 
         button {
+            padding: 10px;
             margin: 5px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
+            color: white;
         }
 
-        .save-btn { background: green; color: white; padding: 8px; }
-        .view-btn { background: blue; color: white; padding: 8px; }
-        .delete-btn { background: red; color: white; padding: 5px; }
-        .edit-btn { background: orange; color: white; padding: 5px; }
+        .add-btn { background: green; }
+        .load-btn { background: blue; }
+        .delete-btn { background: red; }
 
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: #ddd;
+        table {
+            margin: auto;
             margin-top: 20px;
+            border-collapse: collapse;
+            width: 80%;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 
 <body>
 
-<!-- LOGIN SCREEN -->
-<div class="login-screen" id="loginScreen">
-    <div class="login-box">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username"><br>
-        <input type="password" id="password" placeholder="Password"><br>
-        <button onclick="login()">Login</button>
-    </div>
-</div>
+<h1>School Management System</h1>
 
-<!-- MAIN SYSTEM -->
-<div id="mainSystem">
+<input type="text" id="name" placeholder="Student Name">
+<input type="number" id="age" placeholder="Age"><br>
 
-<header>
-    My School System
-    <button class="logout-btn" onclick="logout()">Logout</button>
-</header>
+<button class="add-btn" onclick="addStudent()">Add Student</button>
+<button class="load-btn" onclick="loadStudents()">Load Students</button>
 
-<nav>
-    <a href="#">Home</a>
-    <a href="#">Students</a>
-    <a href="#">Teachers</a>
-</nav>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="studentList"></tbody>
+</table>
 
-<div class="container">
-    <div class="student-section">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        <h2>Register Student</h2>
+  const firebaseConfig = {
+    apiKey: "PASTE_YOUR_API_KEY_HERE",
+    authDomain: "my-school-system-6b.firebaseapp.com",
+    projectId: "my-school-system-6b",
+    storageBucket: "my-school-system-6b.appspot.com",
+    messagingSenderId: "996069799287",
+    appId: "1:996069799287:web:f81dxxxx"
+  };
 
-        <input type="text" id="name" placeholder="Student Name"><br><br>
-        <input type="number" id="age" placeholder="Age"><br><br>
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-        <button class="save-btn" onclick="addStudent()">Save</button>
-        <button class="view-btn" onclick="viewStudents()">View</button>
+  // ADD STUDENT
+  async function addStudent() {
+    const name = document.getElementById("name").value;
+    const age = document.getElementById("age").value;
 
-        <div id="studentList"></div>
-
-    </div>
-</div>
-
-<footer>
-    © 2026 My School System
-</footer>
-
-</div>
-
-<script>
-let editIndex = -1;
-
-// LOGIN
-function login() {
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
-
-    if(user === "admin" && pass === "1234"){
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("mainSystem").style.display = "block";
-    } else {
-        alert("Wrong login details!");
-    }
-}
-
-// LOGOUT
-function logout() {
-    document.getElementById("mainSystem").style.display = "none";
-    document.getElementById("loginScreen").style.display = "flex";
-}
-
-// ADD / EDIT STUDENT
-function addStudent() {
-    let name = document.getElementById("name").value;
-    let age = document.getElementById("age").value;
-
-    if(name === "" || age === ""){
-        alert("Fill all fields");
+    if (name === "" || age === "") {
+        alert("Fill all fields!");
         return;
     }
 
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-
-    if(editIndex === -1){
-        students.push({name, age});
-    } else {
-        students[editIndex] = {name, age};
-        editIndex = -1;
-    }
-
-    localStorage.setItem("students", JSON.stringify(students));
-
-    document.getElementById("name").value = "";
-    document.getElementById("age").value = "";
-
-    viewStudents();
-}
-
-// VIEW
-function viewStudents() {
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-
-    let output = "";
-
-    students.forEach((s, i) => {
-        output += `${i+1}. ${s.name} - Age: ${s.age}
-        <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
-        <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button><br>`;
+    await addDoc(collection(db, "students"), {
+        name: name,
+        age: age
     });
 
-    document.getElementById("studentList").innerHTML = output || "No students yet";
-}
+    alert("Student Added!");
+  }
 
-// DELETE
-function deleteStudent(index) {
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-    students.splice(index, 1);
-    localStorage.setItem("students", JSON.stringify(students));
-    viewStudents();
-}
+  // LOAD STUDENTS
+  async function loadStudents() {
+    const table = document.getElementById("studentList");
+    table.innerHTML = "";
 
-// EDIT
-function editStudent(index) {
-    let students = JSON.parse(localStorage.getItem("students")) || [];
-    document.getElementById("name").value = students[index].name;
-    document.getElementById("age").value = students[index].age;
-    editIndex = index;
-}
+    const querySnapshot = await getDocs(collection(db, "students"));
+
+    querySnapshot.forEach((docItem) => {
+        const data = docItem.data();
+
+        table.innerHTML += `
+            <tr>
+                <td>${data.name}</td>
+                <td>${data.age}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteStudent('${docItem.id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+  }
+
+  // DELETE STUDENT
+  async function deleteStudent(id) {
+    await deleteDoc(doc(db, "students", id));
+    alert("Deleted!");
+    loadStudents();
+  }
+
+  // Make functions usable in HTML
+  window.addStudent = addStudent;
+  window.loadStudents = loadStudents;
+  window.deleteStudent = deleteStudent;
+
 </script>
 
 </body>
