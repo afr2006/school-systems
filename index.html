@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>School Management System</title>
-
     <style>
         body {
             font-family: Arial;
@@ -22,28 +21,39 @@
         }
 
         input {
+            width: 100%;
             padding: 10px;
-            margin: 5px;
-            width: 90%;
+            margin: 5px 0;
         }
 
         button {
             padding: 10px;
-            margin: 5px;
             border: none;
-            cursor: pointer;
             color: white;
+            cursor: pointer;
         }
 
-        .login-btn { background: #2196F3; }
-        .add-btn { background: #4CAF50; }
-        .delete-btn { background: red; }
+        .add-btn {
+            background: green;
+        }
+
+        .delete-btn {
+            background: red;
+        }
+
+        .login-btn {
+            background: #2196F3;
+        }
 
         .card {
             background: white;
             padding: 10px;
             margin-top: 10px;
             border-radius: 5px;
+        }
+
+        #dashboard {
+            display: none;
         }
     </style>
 </head>
@@ -57,107 +67,115 @@
 <div class="container">
 
     <!-- LOGIN -->
-    <div id="loginPage">
+    <div id="login">
         <h3>Login</h3>
-        <input type="text" id="username" placeholder="Username"><br>
-        <input type="password" id="password" placeholder="Password"><br>
+        <input id="username" placeholder="Username">
+        <input id="password" type="password" placeholder="Password">
         <button class="login-btn" onclick="login()">Login</button>
     </div>
 
     <!-- DASHBOARD -->
-    <div id="dashboard" style="display:none;">
+    <div id="dashboard">
         <h3>Dashboard</h3>
 
-        <input type="text" id="adm" placeholder="Admission Number"><br>
-        <input type="text" id="name" placeholder="Student Name"><br>
-        <input type="text" id="class" placeholder="Class"><br>
+        <input id="adm" placeholder="Admission Number">
+        <input id="name" placeholder="Student Name">
+        <input id="class" placeholder="Class">
 
         <button class="add-btn" onclick="addStudent()">Add Student</button>
 
         <h3>Students</h3>
-        <div id="students"></div>
+        <div id="studentsList"></div>
     </div>
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // 🔥 Firebase Import
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { 
+        getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "YOUR-API-KEY",
-    authDomain: "YOUR-PROJECT-ID.firebaseapp.com",
-    projectId: "YOUR-PROJECT-ID",
-    storageBucket: "YOUR-PROJECT-ID.appspot.com",
-    messagingSenderId: "XXXX",
-    appId: "XXXX"
-};
+    // 🔥 YOUR FIREBASE CONFIG (PASTE YOURS HERE)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "XXXX",
+        appId: "XXXX"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-// LOGIN SYSTEM
-window.login = function() {
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
+    // 🔐 LOGIN
+    window.login = function() {
+        const user = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
 
-    if (user === "admin" && pass === "1234") {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
+        if (user === "admin" && pass === "1234") {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            loadStudents();
+        } else {
+            alert("Wrong login details");
+        }
+    }
+
+    // ➕ ADD STUDENT
+    window.addStudent = async function() {
+        const adm = document.getElementById("adm").value;
+        const name = document.getElementById("name").value;
+        const cls = document.getElementById("class").value;
+
+        if (!adm || !name || !cls) {
+            alert("Fill all fields");
+            return;
+        }
+
+        await addDoc(collection(db, "students"), {
+            adm,
+            name,
+            class: cls
+        });
+
+        alert("Student Added");
+
+        document.getElementById("adm").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("class").value = "";
+
         loadStudents();
-    } else {
-        alert("Wrong login details");
-    }
-}
-
-// ADD STUDENT
-window.addStudent = async function() {
-    let adm = document.getElementById("adm").value;
-    let name = document.getElementById("name").value;
-    let cls = document.getElementById("class").value;
-
-    if (adm === "" || name === "" || cls === "") {
-        alert("Fill all fields");
-        return;
     }
 
-    await addDoc(collection(db, "students"), {
-        adm: adm,
-        name: name,
-        class: cls
-    });
+    // 📥 LOAD STUDENTS
+    async function loadStudents() {
+        const querySnapshot = await getDocs(collection(db, "students"));
+        const list = document.getElementById("studentsList");
+        list.innerHTML = "";
 
-    alert("Student Added");
-    loadStudents();
-}
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
 
-// LOAD STUDENTS
-async function loadStudents() {
-    const querySnapshot = await getDocs(collection(db, "students"));
-    let output = "";
+            list.innerHTML += `
+                <div class="card">
+                    <b>${data.adm}</b><br>
+                    ${data.name}<br>
+                    ${data.class}<br>
+                    <button class="delete-btn" onclick="deleteStudent('${docSnap.id}')">Delete</button>
+                </div>
+            `;
+        });
+    }
 
-    querySnapshot.forEach((docSnap) => {
-        let data = docSnap.data();
+    // ❌ DELETE
+    window.deleteStudent = async function(id) {
+        await deleteDoc(doc(db, "students", id));
+        loadStudents();
+    }
 
-        output += `
-            <div class="card">
-                <b>${data.name}</b><br>
-                Adm: ${data.adm}<br>
-                Class: ${data.class}<br>
-                <button class="delete-btn" onclick="deleteStudent('${docSnap.id}')">Delete</button>
-            </div>
-        `;
-    });
-
-    document.getElementById("students").innerHTML = output;
-}
-
-// DELETE STUDENT
-window.deleteStudent = async function(id) {
-    await deleteDoc(doc(db, "students", id));
-    loadStudents();
-}
 </script>
 
 </body>
