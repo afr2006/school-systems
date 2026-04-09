@@ -1,181 +1,214 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>School Management System</title>
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background: #eef2f7;
-        }
+  <title>School Management System</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #eef2f7;
+      margin: 0;
+    }
 
-        header {
-            background: linear-gradient(90deg, #4CAF50, #2E7D32);
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
+    header {
+      background: linear-gradient(90deg, green, darkgreen);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+    }
 
-        .container {
-            padding: 20px;
-        }
+    .container {
+      padding: 20px;
+    }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-        }
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 90%;
+    }
 
-        button {
-            padding: 10px;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
+    button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      cursor: pointer;
+    }
 
-        .add-btn {
-            background: green;
-        }
+    .btn-login { background: green; color: white; }
+    .btn-register { background: blue; color: white; }
+    .btn-logout { background: red; color: white; }
+    .btn-add { background: darkgreen; color: white; }
+    .btn-delete { background: crimson; color: white; }
 
-        .delete-btn {
-            background: red;
-        }
-
-        .login-btn {
-            background: #2196F3;
-        }
-
-        .card {
-            background: white;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-        }
-
-        #dashboard {
-            display: none;
-        }
-    </style>
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>
-    <h2>School Management System</h2>
-</header>
+<header>School Management System</header>
 
 <div class="container">
 
-    <!-- LOGIN -->
-    <div id="login">
-        <h3>Login</h3>
-        <input id="username" placeholder="Username">
-        <input id="password" type="password" placeholder="Password">
-        <button class="login-btn" onclick="login()">Login</button>
-    </div>
+  <!-- LOGIN -->
+  <div id="loginSection">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
 
-    <!-- DASHBOARD -->
-    <div id="dashboard">
-        <h3>Dashboard</h3>
+    <button class="btn-login" onclick="loginUser()">Login</button>
+    <button class="btn-register" onclick="registerUser()">Register</button>
+  </div>
 
-        <input id="adm" placeholder="Admission Number">
-        <input id="name" placeholder="Student Name">
-        <input id="class" placeholder="Class">
+  <!-- MAIN SYSTEM -->
+  <div id="mainSection" style="display:none;">
+    <h2>Dashboard</h2>
 
-        <button class="add-btn" onclick="addStudent()">Add Student</button>
+    <button class="btn-logout" onclick="logoutUser()">Logout</button>
 
-        <h3>Students</h3>
-        <div id="studentsList"></div>
-    </div>
+    <h3>Change Password</h3>
+    <input type="password" id="newPassword" placeholder="New Password">
+    <button onclick="changePassword()">Change Password</button>
+
+    <h3>Add Student</h3>
+    <input type="text" id="name" placeholder="Student Name">
+    <input type="text" id="age" placeholder="Age">
+    <input type="text" id="grade" placeholder="Grade">
+    <button class="btn-add" onclick="addStudent()">Add Student</button>
+
+    <h3>Students List</h3>
+    <div id="studentList"></div>
+  </div>
 
 </div>
 
 <script type="module">
-    // 🔥 Firebase Import
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { 
-        getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-    // 🔥 YOUR FIREBASE CONFIG (PASTE YOURS HERE)
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "XXXX",
-        appId: "XXXX"
-    };
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updatePassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🔐 LOGIN
-    window.login = function() {
-        const user = document.getElementById("username").value;
-        const pass = document.getElementById("password").value;
+// 🔥 PASTE YOUR FIREBASE CONFIG HERE
+const firebaseConfig = {
+  apiKey: "YOUR-KEY",
+  authDomain: "YOUR-PROJECT.firebaseapp.com",
+  projectId: "YOUR-ID",
+  storageBucket: "YOUR.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
 
-        if (user === "admin" && pass === "1234") {
-            document.getElementById("login").style.display = "none";
-            document.getElementById("dashboard").style.display = "block";
-            loadStudents();
-        } else {
-            alert("Wrong login details");
-        }
-    }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    // ➕ ADD STUDENT
-    window.addStudent = async function() {
-        const adm = document.getElementById("adm").value;
-        const name = document.getElementById("name").value;
-        const cls = document.getElementById("class").value;
+// LOGIN
+window.loginUser = function () {
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
-        if (!adm || !name || !cls) {
-            alert("Fill all fields");
-            return;
-        }
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Login successful"))
+    .catch(err => alert(err.message));
+};
 
-        await addDoc(collection(db, "students"), {
-            adm,
-            name,
-            class: cls
-        });
+// REGISTER
+window.registerUser = function () {
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
-        alert("Student Added");
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Account created"))
+    .catch(err => alert(err.message));
+};
 
-        document.getElementById("adm").value = "";
-        document.getElementById("name").value = "";
-        document.getElementById("class").value = "";
+// LOGOUT
+window.logoutUser = function () {
+  signOut(auth);
+};
 
-        loadStudents();
-    }
+// CHANGE PASSWORD
+window.changePassword = function () {
+  const user = auth.currentUser;
+  const newPass = document.getElementById("newPassword").value;
 
-    // 📥 LOAD STUDENTS
-    async function loadStudents() {
-        const querySnapshot = await getDocs(collection(db, "students"));
-        const list = document.getElementById("studentsList");
-        list.innerHTML = "";
+  if (!user) return alert("Not logged in");
 
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
+  updatePassword(user, newPass)
+    .then(() => alert("Password updated successfully"))
+    .catch(err => alert(err.message));
+};
 
-            list.innerHTML += `
-                <div class="card">
-                    <b>${data.adm}</b><br>
-                    ${data.name}<br>
-                    ${data.class}<br>
-                    <button class="delete-btn" onclick="deleteStudent('${docSnap.id}')">Delete</button>
-                </div>
-            `;
-        });
-    }
+// ADD STUDENT
+window.addStudent = async function () {
+  const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const grade = document.getElementById("grade").value;
 
-    // ❌ DELETE
-    window.deleteStudent = async function(id) {
-        await deleteDoc(doc(db, "students", id));
-        loadStudents();
-    }
+  await addDoc(collection(db, "students"), {
+    name, age, grade
+  });
 
+  alert("Student added");
+  loadStudents();
+};
+
+// LOAD STUDENTS
+async function loadStudents() {
+  const querySnapshot = await getDocs(collection(db, "students"));
+  const list = document.getElementById("studentList");
+  list.innerHTML = "";
+
+  querySnapshot.forEach(docSnap => {
+    const data = docSnap.data();
+
+    list.innerHTML += `
+      <div class="card">
+        ${data.name} - Age: ${data.age} - Grade: ${data.grade}
+        <br>
+        <button class="btn-delete" onclick="deleteStudent('${docSnap.id}')">Delete</button>
+      </div>
+    `;
+  });
+}
+
+// DELETE STUDENT
+window.deleteStudent = async function (id) {
+  await deleteDoc(doc(db, "students", id));
+  loadStudents();
+};
+
+// AUTO LOGIN CHECK
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loginSection.style.display = "none";
+    mainSection.style.display = "block";
+    loadStudents();
+  } else {
+    loginSection.style.display = "block";
+    mainSection.style.display = "none";
+  }
+});
 </script>
 
 </body>
