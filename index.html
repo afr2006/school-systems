@@ -207,6 +207,28 @@ window.deleteStudent = async function (id) {
     loadStudents();
 };
 </script>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBnC1Mrkb6HK7b_XCV9XJxJNIO9SyMYlrg",
+    authDomain: "school-system-3bf80.firebaseapp.com",
+    projectId: "school-system-3bf80",
+    storageBucket: "school-system-3bf80.firebasestorage.app",
+    messagingSenderId: "166174516481",
+    appId: "1:166174516481:web:721ca8bf9a70682bc22700",
+    measurementId: "G-TRWKZ47BMG"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
