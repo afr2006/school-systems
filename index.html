@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Africore School System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My School System</title>
 
     <style>
         body {
@@ -11,57 +10,94 @@
             background: #eef2f7;
         }
 
+        /* NAVBAR */
         header {
             background: linear-gradient(90deg, #4CAF50, #2E7D32);
             color: white;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
         }
 
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: #388E3C;
+            padding: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .hero h1 {
+            margin-bottom: 10px;
+        }
+
+        .hero button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hero button:hover {
+            background: #2E7D32;
+        }
+
+        /* CARDS */
         .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
             padding: 20px;
         }
 
         .card {
             background: white;
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
+            width: 250px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        h2 {
-            color: #2E7D32;
+        .card h3 {
+            margin-bottom: 10px;
         }
 
-        p {
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 18px;
+        .card button {
             background: #4CAF50;
+            border: none;
+            padding: 8px 15px;
             color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
-        .btn:hover {
-            background: #388E3C;
+        .card button:hover {
+            background: #2E7D32;
         }
 
+        /* FOOTER */
         footer {
             text-align: center;
             padding: 15px;
-            margin-top: 30px;
-            color: #777;
-            font-size: 14px;
+            background: #ddd;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -69,27 +105,60 @@
 <body>
 
 <header>
-    🎓 Africore School Management System
+    My School System
 </header>
+
+<nav>
+    <a href="#">Home</a>
+    <a href="#">Students</a>
+    <a href="#">Teachers</a>
+    <a href="#">Fees</a>
+</nav>
+
+<div class="hero">
+    <h1>Welcome to My School System 🎓</h1>
+    <p>Manage students, teachers and school records easily</p>
+    <button onclick="login()">Login</button>
+</div>
 
 <div class="container">
 
     <div class="card">
-        <h2>Welcome</h2>
-        <p>
-            This system allows schools to register students, track school fees,
-            monitor balances, and give controlled access to teachers.
-            The administrator has full control over the system.
-        </p>
+        <h3>Students</h3>
+        <p>Register and manage students</p>
+        <button onclick="alert('Students section coming soon')">Open</button>
+    </div>
 
-        <a href="#" class="btn">Login</a>
+    <div class="card">
+        <h3>Teachers</h3>
+        <p>Manage teacher records</p>
+        <button onclick="alert('Teachers section coming soon')">Open</button>
+    </div>
+
+    <div class="card">
+        <h3>Fees</h3>
+        <p>Track school payments</p>
+        <button onclick="alert('Fees section coming soon')">Open</button>
     </div>
 
 </div>
 
 <footer>
-    © 2026 Africore Systems
+    © 2026 My School System
 </footer>
+
+<script>
+    function login() {
+        let user = prompt("Enter username:");
+        let pass = prompt("Enter password:");
+
+        if(user === "admin" && pass === "1234"){
+            alert("Login successful!");
+        } else {
+            alert("Wrong login details!");
+        }
+    }
+</script>
 
 </body>
 </html>
