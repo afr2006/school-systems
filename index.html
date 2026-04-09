@@ -12,6 +12,7 @@ body{font-family:Arial;margin:0;background:#eef1f5;}
 input,select{width:95%;padding:10px;margin:5px 0;}
 button{padding:8px;margin:5px;border:none;cursor:pointer;}
 .green{background:green;color:white;}
+.orange{background:orange;color:white;}
 .red{background:red;color:white;}
 .blue{background:blue;color:white;}
 .black{background:black;color:white;}
@@ -46,51 +47,56 @@ li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8
 
 <!-- STUDENTS -->
 <div id="studentsSection">
+
 <div class="card">
+<h3>Add / Edit Student</h3>
 <input id="s_name" placeholder="Name">
-<input id="s_adm" placeholder="Admission">
+<input id="s_adm" placeholder="Admission No">
 <input id="s_class" placeholder="Class">
-<button class="green" onclick="addStudent()">Add Student</button>
+<input id="s_age" placeholder="Age">
+<input id="s_parent" placeholder="Parent Contact">
+<button class="green" onclick="addStudent()">Save</button>
 </div>
 
 <div class="card">
 <ul id="studentList"></ul>
 </div>
+
 </div>
 
 <!-- TEACHERS -->
 <div id="teachersSection" style="display:none;">
+
 <div class="card">
+<h3>Add / Edit Teacher</h3>
 <input id="t_name" placeholder="Name">
 <input id="t_subject" placeholder="Subject">
 <input id="t_phone" placeholder="Phone">
-<button class="green" onclick="addTeacher()">Add Teacher</button>
+<button class="green" onclick="addTeacher()">Save</button>
 </div>
 
 <div class="card">
 <ul id="teacherList"></ul>
 </div>
+
 </div>
 
 <!-- FEES -->
 <div id="feesSection" style="display:none;">
 
 <div class="card">
-<h3>Add Fee</h3>
-
+<h3>Add / Edit Fee</h3>
 <select id="f_student"></select>
 <input id="f_paid" placeholder="Amount Paid">
-
-<button class="green" onclick="addFee()">Add Fee</button>
+<button class="green" onclick="addFee()">Save</button>
 </div>
 
 <div class="card">
-<h3>Fee Records</h3>
 <ul id="feeList"></ul>
 </div>
 
 <div class="card">
-<h3>Reports 📊</h3>
+<h3>Reports</h3>
 <p id="totalPaid"></p>
 <p id="totalBalance"></p>
 </div>
@@ -107,7 +113,7 @@ let currentUser=localStorage.getItem("currentUser");
 if(currentUser) showSystem();
 
 function register(){
-if(!username.value||!password.value) return alert("Fill fields");
+if(!username.value||!password.value)return alert("Fill fields");
 users.push({username:username.value,password:password.value});
 localStorage.setItem("users",JSON.stringify(users));
 alert("Registered");
@@ -132,50 +138,95 @@ systemBox.style.display="block";
 displayStudents();
 displayTeachers();
 displayFees();
-loadStudentsToDropdown();
+loadStudents();
 }
 
 // NAV
-function showSection(sec){
+function showSection(s){
 studentsSection.style.display="none";
 teachersSection.style.display="none";
 feesSection.style.display="none";
-document.getElementById(sec+"Section").style.display="block";
+document.getElementById(s+"Section").style.display="block";
 }
 
 // STUDENTS
 let students=JSON.parse(localStorage.getItem("students"))||[];
+let editStudentIndex=-1;
 
 function addStudent(){
-students.push({name:s_name.value,adm:s_adm.value,class:s_class.value});
+let data={
+name:s_name.value,
+adm:s_adm.value,
+class:s_class.value,
+age:s_age.value,
+parent:s_parent.value
+};
+
+if(editStudentIndex==-1) students.push(data);
+else{students[editStudentIndex]=data;editStudentIndex=-1;}
+
 localStorage.setItem("students",JSON.stringify(students));
 displayStudents();
-loadStudentsToDropdown();
+loadStudents();
+clearStudentForm();
 }
 
 function displayStudents(){
 studentList.innerHTML="";
 students.forEach((s,i)=>{
 studentList.innerHTML+=`
-<li>${s.name} - ${s.adm} (${s.class})
-<button class="red" onclick="delStudent(${i})">Delete</button></li>`;
+<li>
+<b>${s.name}</b> (${s.adm})<br>
+Class: ${s.class} | Age: ${s.age}<br>
+Parent: ${s.parent}<br>
+<button class="orange" onclick="editStudent(${i})">Edit</button>
+<button class="red" onclick="delStudent(${i})">Delete</button>
+</li>`;
 });
+}
+
+function editStudent(i){
+let s=students[i];
+s_name.value=s.name;
+s_adm.value=s.adm;
+s_class.value=s.class;
+s_age.value=s.age;
+s_parent.value=s.parent;
+editStudentIndex=i;
 }
 
 function delStudent(i){
 students.splice(i,1);
 localStorage.setItem("students",JSON.stringify(students));
 displayStudents();
-loadStudentsToDropdown();
+loadStudents();
+}
+
+function clearStudentForm(){
+s_name.value="";
+s_adm.value="";
+s_class.value="";
+s_age.value="";
+s_parent.value="";
 }
 
 // TEACHERS
 let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
+let editTeacherIndex=-1;
 
 function addTeacher(){
-teachers.push({name:t_name.value,subject:t_subject.value,phone:t_phone.value});
+let data={
+name:t_name.value,
+subject:t_subject.value,
+phone:t_phone.value
+};
+
+if(editTeacherIndex==-1) teachers.push(data);
+else{teachers[editTeacherIndex]=data;editTeacherIndex=-1;}
+
 localStorage.setItem("teachers",JSON.stringify(teachers));
 displayTeachers();
+clearTeacherForm();
 }
 
 function displayTeachers(){
@@ -183,8 +234,17 @@ teacherList.innerHTML="";
 teachers.forEach((t,i)=>{
 teacherList.innerHTML+=`
 <li>${t.name} - ${t.subject} (${t.phone})
+<button class="orange" onclick="editTeacher(${i})">Edit</button>
 <button class="red" onclick="delTeacher(${i})">Delete</button></li>`;
 });
+}
+
+function editTeacher(i){
+let t=teachers[i];
+t_name.value=t.name;
+t_subject.value=t.subject;
+t_phone.value=t.phone;
+editTeacherIndex=i;
 }
 
 function delTeacher(i){
@@ -193,10 +253,17 @@ localStorage.setItem("teachers",JSON.stringify(teachers));
 displayTeachers();
 }
 
-// FEES (LINKED)
-let fees=JSON.parse(localStorage.getItem("fees"))||[];
+function clearTeacherForm(){
+t_name.value="";
+t_subject.value="";
+t_phone.value="";
+}
 
-function loadStudentsToDropdown(){
+// FEES
+let fees=JSON.parse(localStorage.getItem("fees"))||[];
+let editFeeIndex=-1;
+
+function loadStudents(){
 f_student.innerHTML="";
 students.forEach((s,i)=>{
 f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
@@ -208,42 +275,51 @@ let index=f_student.value;
 let student=students[index];
 
 let paid=Number(f_paid.value);
-let total=10000; // example fixed fee
+let total=10000;
 let balance=total-paid;
 
-fees.push({
-student:student.name,
-paid:paid,
-balance:balance
-});
+let data={student:student.name,paid,balance};
+
+if(editFeeIndex==-1) fees.push(data);
+else{fees[editFeeIndex]=data;editFeeIndex=-1;}
 
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
+clearFeeForm();
 }
 
 function displayFees(){
 feeList.innerHTML="";
-
-let totalPaid=0;
-let totalBalance=0;
+let totalPaid=0,totalBalance=0;
 
 fees.forEach((f,i)=>{
 totalPaid+=f.paid;
 totalBalance+=f.balance;
 
 feeList.innerHTML+=`
-<li>${f.student} - Paid: ${f.paid} | Balance: ${f.balance}
+<li>${f.student} - Paid:${f.paid} | Balance:${f.balance}
+<button class="orange" onclick="editFee(${i})">Edit</button>
 <button class="red" onclick="delFee(${i})">Delete</button></li>`;
 });
 
-document.getElementById("totalPaid").innerText="Total Paid: "+totalPaid;
-document.getElementById("totalBalance").innerText="Total Balance: "+totalBalance;
+totalPaid.innerText="Total Paid: "+totalPaid;
+totalBalance.innerText="Total Balance: "+totalBalance;
+}
+
+function editFee(i){
+let f=fees[i];
+f_paid.value=f.paid;
+editFeeIndex=i;
 }
 
 function delFee(i){
 fees.splice(i,1);
 localStorage.setItem("fees",JSON.stringify(fees));
 displayFees();
+}
+
+function clearFeeForm(){
+f_paid.value="";
 }
 </script>
 
