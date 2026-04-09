@@ -1,32 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student System</title>
+    <title>Student Dashboard</title>
 
-    <!-- PDF LIBRARY -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body {
+            margin: 0;
             font-family: Arial;
-            background: #f4f4f4;
+            background: #eef1f5;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
             text-align: center;
         }
 
         .container {
-            width: 90%;
-            max-width: 500px;
-            margin: auto;
-            background: white;
             padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin: 10px auto;
             border-radius: 10px;
-            margin-top: 30px;
+            max-width: 600px;
         }
 
         input {
             width: 95%;
             padding: 10px;
-            margin: 10px 0;
+            margin: 8px 0;
         }
 
         button {
@@ -36,87 +44,104 @@
             margin: 5px;
         }
 
-        .add-btn { background: green; color: white; }
-        .edit-btn { background: orange; color: white; }
-        .delete-btn { background: red; color: white; }
-        .logout-btn { background: black; color: white; }
-        .pdf-btn { background: blue; color: white; }
+        .green { background: green; color: white; }
+        .orange { background: orange; color: white; }
+        .red { background: red; color: white; }
+        .blue { background: blue; color: white; }
+        .black { background: black; color: white; }
 
         li {
             list-style: none;
+            background: #f4f4f4;
             margin: 10px 0;
-            background: #eee;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 8px;
         }
 
         img {
             border-radius: 50%;
-            margin-right: 10px;
         }
     </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="container" id="authBox">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+<div class="header">🎓 Student Management Dashboard</div>
 
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
+<!-- AUTH -->
+<div class="card" id="authBox">
+    <h3>Login / Register</h3>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button class="blue" onclick="login()">Login</button>
+    <button class="green" onclick="register()">Register</button>
 </div>
 
 <!-- SYSTEM -->
-<div class="container" id="systemBox" style="display:none;">
-    <h2>Student System</h2>
+<div id="systemBox" style="display:none;">
 
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <button class="pdf-btn" onclick="exportPDF()">Export to PDF</button>
+    <div class="card">
+        <button class="black" onclick="logout()">Logout</button>
+        <button class="blue" onclick="exportPDF()">Export PDF</button>
+    </div>
 
-    <input type="text" id="name" placeholder="Student Name">
-    <input type="text" id="admission" placeholder="Admission No">
-    <input type="file" id="photo">
+    <div class="card">
+        <h3>Add Student</h3>
+        <input id="name" placeholder="Name">
+        <input id="admission" placeholder="Admission No">
+        <input type="file" id="photo">
+        <button class="green" onclick="addStudent()">Add Student</button>
+    </div>
 
-    <button class="add-btn" onclick="addStudent()">Add Student</button>
+    <div class="card">
+        <h3>Search</h3>
+        <input id="search" onkeyup="searchStudent()" placeholder="Search student">
+    </div>
 
-    <input type="text" id="search" placeholder="Search..." onkeyup="searchStudent()">
+    <div class="card">
+        <h3>Students</h3>
+        <ul id="studentList"></ul>
+    </div>
 
-    <h3>Students</h3>
-    <ul id="studentList"></ul>
+    <div class="card">
+        <h3>Change Password 🔑</h3>
+        <input id="oldPass" type="password" placeholder="Old Password">
+        <input id="newPass" type="password" placeholder="New Password">
+        <button class="orange" onclick="changePassword()">Change Password</button>
+    </div>
+
 </div>
 
 <script>
-// ================= AUTH =================
+// AUTH
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let currentUser = localStorage.getItem("currentUser");
 
 if (currentUser) showSystem();
 
 function register() {
-    let username = usernameInput();
-    let password = passwordInput();
+    let u = username.value;
+    let p = password.value;
 
-    if (!username || !password) return alert("Fill all fields");
+    if (!u || !p) return alert("Fill all fields");
 
-    users.push({ username, password });
+    users.push({ username: u, password: p });
     localStorage.setItem("users", JSON.stringify(users));
-    alert("Registered! Now login.");
+    alert("Registered!");
 }
 
 function login() {
-    let username = usernameInput();
-    let password = passwordInput();
+    let u = username.value;
+    let p = password.value;
 
-    let user = users.find(u => u.username === username && u.password === password);
+    let user = users.find(x => x.username === u && x.password === p);
 
     if (user) {
-        localStorage.setItem("currentUser", username);
+        localStorage.setItem("currentUser", u);
         showSystem();
     } else {
-        alert("Wrong login details");
+        alert("Wrong login");
     }
 }
 
@@ -126,58 +151,66 @@ function logout() {
 }
 
 function showSystem() {
-    document.getElementById("authBox").style.display = "none";
-    document.getElementById("systemBox").style.display = "block";
+    authBox.style.display = "none";
+    systemBox.style.display = "block";
     displayStudents();
 }
 
-function usernameInput() {
-    return document.getElementById("username").value;
-}
-function passwordInput() {
-    return document.getElementById("password").value;
+// CHANGE PASSWORD
+function changePassword() {
+    let oldP = oldPass.value;
+    let newP = newPass.value;
+
+    let user = users.find(u => u.username === currentUser);
+
+    if (user.password !== oldP) {
+        alert("Wrong old password");
+        return;
+    }
+
+    user.password = newP;
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Password changed!");
 }
 
-// ================= STUDENTS =================
+// STUDENTS
 let students = JSON.parse(localStorage.getItem("students")) || [];
 let editIndex = -1;
 
-function getBase64(file, callback) {
-    let reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => callback(reader.result);
+function getBase64(file, cb) {
+    let r = new FileReader();
+    r.readAsDataURL(file);
+    r.onload = () => cb(r.result);
 }
 
 function addStudent() {
-    let name = document.getElementById("name").value;
-    let admission = document.getElementById("admission").value;
-    let file = document.getElementById("photo").files[0];
+    let n = name.value;
+    let a = admission.value;
+    let f = photo.files[0];
 
-    if (!name || !admission) return alert("Fill all fields");
+    if (!n || !a) return alert("Fill fields");
 
-    if (file) {
-        getBase64(file, base64 => saveStudent(name, admission, base64));
+    if (f) {
+        getBase64(f, img => saveStudent(n, a, img));
     } else {
-        saveStudent(name, admission, "");
+        saveStudent(n, a, "");
     }
 }
 
-function saveStudent(name, admission, photo) {
+function saveStudent(n, a, img) {
     if (editIndex === -1) {
-        students.push({ name, admission, photo });
+        students.push({ name: n, admission: a, photo: img });
     } else {
-        students[editIndex] = { name, admission, photo };
+        students[editIndex] = { name: n, admission: a, photo: img };
         editIndex = -1;
     }
 
     localStorage.setItem("students", JSON.stringify(students));
-    clearForm();
     displayStudents();
 }
 
 function displayStudents() {
-    let list = document.getElementById("studentList");
-    list.innerHTML = "";
+    studentList.innerHTML = "";
 
     students.forEach((s, i) => {
         let li = document.createElement("li");
@@ -186,22 +219,22 @@ function displayStudents() {
             <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
             ${s.name} - ${s.admission}
             <br>
-            <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
-            <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
+            <button class="orange" onclick="editStudent(${i})">Edit</button>
+            <button class="red" onclick="deleteStudent(${i})">Delete</button>
         `;
 
-        list.appendChild(li);
+        studentList.appendChild(li);
     });
 }
 
 function editStudent(i) {
-    document.getElementById("name").value = students[i].name;
-    document.getElementById("admission").value = students[i].admission;
+    name.value = students[i].name;
+    admission.value = students[i].admission;
     editIndex = i;
 }
 
 function deleteStudent(i) {
-    if (confirm("Delete this student?")) {
+    if (confirm("Delete?")) {
         students.splice(i, 1);
         localStorage.setItem("students", JSON.stringify(students));
         displayStudents();
@@ -209,12 +242,12 @@ function deleteStudent(i) {
 }
 
 function searchStudent() {
-    let input = document.getElementById("search").value.toLowerCase();
-    let list = document.getElementById("studentList");
-    list.innerHTML = "";
+    let val = search.value.toLowerCase();
+
+    studentList.innerHTML = "";
 
     students
-        .filter(s => s.name.toLowerCase().includes(input))
+        .filter(s => s.name.toLowerCase().includes(val))
         .forEach((s, i) => {
             let li = document.createElement("li");
 
@@ -222,33 +255,24 @@ function searchStudent() {
                 <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
                 ${s.name} - ${s.admission}
                 <br>
-                <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
-                <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
+                <button class="orange" onclick="editStudent(${i})">Edit</button>
+                <button class="red" onclick="deleteStudent(${i})">Delete</button>
             `;
 
-            list.appendChild(li);
+            studentList.appendChild(li);
         });
 }
 
-function clearForm() {
-    document.getElementById("name").value = "";
-    document.getElementById("admission").value = "";
-    document.getElementById("photo").value = "";
-}
-
-// ================= PDF =================
+// PDF
 function exportPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    let doc = new jsPDF();
 
-    doc.setFontSize(16);
     doc.text("Student List", 20, 20);
 
     let y = 30;
-
     students.forEach((s, i) => {
-        doc.setFontSize(12);
-        doc.text(`${i + 1}. ${s.name} - ${s.admission}`, 20, y);
+        doc.text(`${i+1}. ${s.name} - ${s.admission}`, 20, y);
         y += 10;
     });
 
