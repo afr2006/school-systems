@@ -16,6 +16,7 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
+            margin-top: 30px;
         }
 
         input {
@@ -31,20 +32,10 @@
             margin: 5px;
         }
 
-        .add-btn {
-            background: green;
-            color: white;
-        }
-
-        .edit-btn {
-            background: orange;
-            color: white;
-        }
-
-        .delete-btn {
-            background: red;
-            color: white;
-        }
+        .add-btn { background: green; color: white; }
+        .edit-btn { background: orange; color: white; }
+        .delete-btn { background: red; color: white; }
+        .logout-btn { background: black; color: white; }
 
         li {
             list-style: none;
@@ -63,8 +54,21 @@
 
 <body>
 
-<div class="container">
+<!-- LOGIN -->
+<div class="container" id="authBox">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+</div>
+
+<!-- MAIN SYSTEM -->
+<div class="container" id="systemBox" style="display:none;">
     <h2>Student System</h2>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
 
     <input type="text" id="name" placeholder="Student Name">
     <input type="text" id="admission" placeholder="Admission No">
@@ -79,24 +83,71 @@
 </div>
 
 <script>
+// ================= AUTH SYSTEM =================
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = localStorage.getItem("currentUser");
+
+// Auto login
+if (currentUser) {
+    showSystem();
+}
+
+function register() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    if (!username || !password) {
+        alert("Fill all fields");
+        return;
+    }
+
+    users.push({ username, password });
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Registered! Now login.");
+}
+
+function login() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    let user = users.find(u => u.username === username && u.password === password);
+
+    if (user) {
+        localStorage.setItem("currentUser", username);
+        showSystem();
+    } else {
+        alert("Wrong login details");
+    }
+}
+
+function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+}
+
+function showSystem() {
+    document.getElementById("authBox").style.display = "none";
+    document.getElementById("systemBox").style.display = "block";
+    displayStudents();
+}
+
+// ================= STUDENT SYSTEM =================
 let students = JSON.parse(localStorage.getItem("students")) || [];
 let editIndex = -1;
 
-// Convert image to Base64
 function getBase64(file, callback) {
     let reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => callback(reader.result);
 }
 
-// Add student
 function addStudent() {
     let name = document.getElementById("name").value;
     let admission = document.getElementById("admission").value;
     let file = document.getElementById("photo").files[0];
 
     if (!name || !admission) {
-        alert("Please fill all fields");
+        alert("Fill all fields");
         return;
     }
 
@@ -109,7 +160,6 @@ function addStudent() {
     }
 }
 
-// Save student
 function saveStudent(name, admission, photo) {
     if (editIndex === -1) {
         students.push({ name, admission, photo });
@@ -123,7 +173,6 @@ function saveStudent(name, admission, photo) {
     displayStudents();
 }
 
-// Display students
 function displayStudents() {
     let list = document.getElementById("studentList");
     list.innerHTML = "";
@@ -143,14 +192,12 @@ function displayStudents() {
     });
 }
 
-// Edit
 function editStudent(index) {
     document.getElementById("name").value = students[index].name;
     document.getElementById("admission").value = students[index].admission;
     editIndex = index;
 }
 
-// Delete
 function deleteStudent(index) {
     if (confirm("Delete this student?")) {
         students.splice(index, 1);
@@ -159,7 +206,6 @@ function deleteStudent(index) {
     }
 }
 
-// Search
 function searchStudent() {
     let input = document.getElementById("search").value.toLowerCase();
     let list = document.getElementById("studentList");
@@ -182,15 +228,11 @@ function searchStudent() {
         });
 }
 
-// Clear form
 function clearForm() {
     document.getElementById("name").value = "";
     document.getElementById("admission").value = "";
     document.getElementById("photo").value = "";
 }
-
-// Load data
-displayStudents();
 </script>
 
 </body>
