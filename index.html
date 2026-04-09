@@ -1,218 +1,195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Full Student System</title>
+    <title>Student System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            text-align: center;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        .container {
+            width: 90%;
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
 
-<style>
-body { font-family: Arial; background: #f2f2f2; text-align: center; }
+        input {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+        }
 
-.container {
-    width: 350px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-}
+        button {
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
 
-input {
-    width: 90%;
-    padding: 8px;
-    margin: 5px;
-}
+        .add-btn {
+            background: green;
+            color: white;
+        }
 
-button {
-    padding: 6px 10px;
-    margin: 5px;
-    border: none;
-    cursor: pointer;
-}
+        .edit-btn {
+            background: orange;
+            color: white;
+        }
 
-.add-btn { background: green; color: white; }
-.edit-btn { background: orange; color: white; }
-.delete-btn { background: red; color: white; }
-.logout { background: black; color: white; }
+        .delete-btn {
+            background: red;
+            color: white;
+        }
 
-img { width: 40px; height: 40px; border-radius: 50%; }
+        li {
+            list-style: none;
+            margin: 10px 0;
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
 
-li { text-align: left; margin: 10px 0; }
-</style>
+        img {
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="container" id="loginPage">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
-</div>
-
-<!-- SYSTEM -->
-<div class="container" id="systemPage" style="display:none;">
+<div class="container">
     <h2>Student System</h2>
 
     <input type="text" id="name" placeholder="Student Name">
-    <input type="number" id="adm" placeholder="Admission No">
+    <input type="text" id="admission" placeholder="Admission No">
     <input type="file" id="photo">
-    <br>
+
     <button class="add-btn" onclick="addStudent()">Add Student</button>
 
-    <br><br>
     <input type="text" id="search" placeholder="Search..." onkeyup="searchStudent()">
 
     <h3>Students</h3>
-    <ul id="list"></ul>
-
-    <button onclick="exportPDF()">Export PDF</button>
-    <br><br>
-    <button class="logout" onclick="logout()">Logout</button>
+    <ul id="studentList"></ul>
 </div>
 
 <script>
-let users = JSON.parse(localStorage.getItem("users")) || [];
 let students = JSON.parse(localStorage.getItem("students")) || [];
+let editIndex = -1;
 
-// LOGIN SYSTEM
-function register() {
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
-
-    if(user === "" || pass === "") return alert("Fill all fields");
-
-    users.push({user, pass});
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("Registered! Now login");
+// Convert image to Base64
+function getBase64(file, callback) {
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => callback(reader.result);
 }
 
-function login() {
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
+// Add student
+function addStudent() {
+    let name = document.getElementById("name").value;
+    let admission = document.getElementById("admission").value;
+    let file = document.getElementById("photo").files[0];
 
-    let found = users.find(u => u.user === user && u.pass === pass);
+    if (!name || !admission) {
+        alert("Please fill all fields");
+        return;
+    }
 
-    if(found) {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("systemPage").style.display = "block";
+    if (file) {
+        getBase64(file, function(base64) {
+            saveStudent(name, admission, base64);
+        });
     } else {
-        alert("Wrong details");
+        saveStudent(name, admission, "");
     }
 }
 
-function logout() {
-    location.reload();
-}
+// Save student
+function saveStudent(name, admission, photo) {
+    if (editIndex === -1) {
+        students.push({ name, admission, photo });
+    } else {
+        students[editIndex] = { name, admission, photo };
+        editIndex = -1;
+    }
 
-// SAVE
-function saveStudents() {
     localStorage.setItem("students", JSON.stringify(students));
+    clearForm();
+    displayStudents();
 }
 
-// ADD STUDENT
-function addStudent() {
-    let name = document.getElementById("name").value;
-    let adm = document.getElementById("adm").value;
-    let file = document.getElementById("photo").files[0];
-
-    if(!name || !adm) return alert("Fill all fields");
-
-    let reader = new FileReader();
-
-    reader.onload = function() {
-        students.push({
-            name,
-            adm,
-            photo: reader.result || ""
-        });
-
-        saveStudents();
-        displayStudents();
-    };
-
-    if(file) reader.readAsDataURL(file);
-    else reader.onload();
-
-    document.getElementById("name").value = "";
-    document.getElementById("adm").value = "";
-    document.getElementById("photo").value = "";
-}
-
-// DISPLAY
-function displayStudents(filtered = students) {
-    let list = document.getElementById("list");
+// Display students
+function displayStudents() {
+    let list = document.getElementById("studentList");
     list.innerHTML = "";
 
-    filtered.forEach((s, i) => {
+    students.forEach((student, index) => {
         let li = document.createElement("li");
 
         li.innerHTML = `
-            <img src="${s.photo || ''}"/>
-            ${s.name} - ${s.adm}
-            <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
-            <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
+            <img src="${student.photo || 'https://via.placeholder.com/50'}" width="50">
+            ${student.name} - ${student.admission}
+            <br>
+            <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
         `;
 
         list.appendChild(li);
     });
 }
 
-// DELETE
-function deleteStudent(i) {
-    if(confirm("Delete student?")) {
-        students.splice(i,1);
-        saveStudents();
+// Edit
+function editStudent(index) {
+    document.getElementById("name").value = students[index].name;
+    document.getElementById("admission").value = students[index].admission;
+    editIndex = index;
+}
+
+// Delete
+function deleteStudent(index) {
+    if (confirm("Delete this student?")) {
+        students.splice(index, 1);
+        localStorage.setItem("students", JSON.stringify(students));
         displayStudents();
     }
 }
 
-// EDIT
-function editStudent(i) {
-    let name = prompt("Edit name", students[i].name);
-    let adm = prompt("Edit adm", students[i].adm);
-
-    if(name && adm) {
-        students[i].name = name;
-        students[i].adm = adm;
-        saveStudents();
-        displayStudents();
-    }
-}
-
-// SEARCH
+// Search
 function searchStudent() {
-    let val = document.getElementById("search").value.toLowerCase();
+    let input = document.getElementById("search").value.toLowerCase();
+    let list = document.getElementById("studentList");
+    list.innerHTML = "";
 
-    let filtered = students.filter(s =>
-        s.name.toLowerCase().includes(val) ||
-        s.adm.includes(val)
-    );
+    students
+        .filter(s => s.name.toLowerCase().includes(input))
+        .forEach((student, index) => {
+            let li = document.createElement("li");
 
-    displayStudents(filtered);
+            li.innerHTML = `
+                <img src="${student.photo || 'https://via.placeholder.com/50'}" width="50">
+                ${student.name} - ${student.admission}
+                <br>
+                <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
+                <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+            `;
+
+            list.appendChild(li);
+        });
 }
 
-// EXPORT PDF
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    let doc = new jsPDF();
-
-    doc.text("Student List", 10, 10);
-
-    let y = 20;
-    students.forEach(s => {
-        doc.text(`${s.name} - ${s.adm}`, 10, y);
-        y += 10;
-    });
-
-    doc.save("students.pdf");
+// Clear form
+function clearForm() {
+    document.getElementById("name").value = "";
+    document.getElementById("admission").value = "";
+    document.getElementById("photo").value = "";
 }
 
-// INIT
+// Load data
 displayStudents();
 </script>
 
