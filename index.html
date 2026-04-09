@@ -2,6 +2,10 @@
 <html>
 <head>
     <title>Student System</title>
+
+    <!-- PDF LIBRARY -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
         body {
             font-family: Arial;
@@ -36,6 +40,7 @@
         .edit-btn { background: orange; color: white; }
         .delete-btn { background: red; color: white; }
         .logout-btn { background: black; color: white; }
+        .pdf-btn { background: blue; color: white; }
 
         li {
             list-style: none;
@@ -64,11 +69,12 @@
     <button onclick="register()">Register</button>
 </div>
 
-<!-- MAIN SYSTEM -->
+<!-- SYSTEM -->
 <div class="container" id="systemBox" style="display:none;">
     <h2>Student System</h2>
 
     <button class="logout-btn" onclick="logout()">Logout</button>
+    <button class="pdf-btn" onclick="exportPDF()">Export to PDF</button>
 
     <input type="text" id="name" placeholder="Student Name">
     <input type="text" id="admission" placeholder="Admission No">
@@ -83,23 +89,17 @@
 </div>
 
 <script>
-// ================= AUTH SYSTEM =================
+// ================= AUTH =================
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let currentUser = localStorage.getItem("currentUser");
 
-// Auto login
-if (currentUser) {
-    showSystem();
-}
+if (currentUser) showSystem();
 
 function register() {
-    let username = document.getElementById("username").value;
-    let password = document.getElementById("password").value;
+    let username = usernameInput();
+    let password = passwordInput();
 
-    if (!username || !password) {
-        alert("Fill all fields");
-        return;
-    }
+    if (!username || !password) return alert("Fill all fields");
 
     users.push({ username, password });
     localStorage.setItem("users", JSON.stringify(users));
@@ -107,8 +107,8 @@ function register() {
 }
 
 function login() {
-    let username = document.getElementById("username").value;
-    let password = document.getElementById("password").value;
+    let username = usernameInput();
+    let password = passwordInput();
 
     let user = users.find(u => u.username === username && u.password === password);
 
@@ -131,7 +131,14 @@ function showSystem() {
     displayStudents();
 }
 
-// ================= STUDENT SYSTEM =================
+function usernameInput() {
+    return document.getElementById("username").value;
+}
+function passwordInput() {
+    return document.getElementById("password").value;
+}
+
+// ================= STUDENTS =================
 let students = JSON.parse(localStorage.getItem("students")) || [];
 let editIndex = -1;
 
@@ -146,15 +153,10 @@ function addStudent() {
     let admission = document.getElementById("admission").value;
     let file = document.getElementById("photo").files[0];
 
-    if (!name || !admission) {
-        alert("Fill all fields");
-        return;
-    }
+    if (!name || !admission) return alert("Fill all fields");
 
     if (file) {
-        getBase64(file, function(base64) {
-            saveStudent(name, admission, base64);
-        });
+        getBase64(file, base64 => saveStudent(name, admission, base64));
     } else {
         saveStudent(name, admission, "");
     }
@@ -177,30 +179,30 @@ function displayStudents() {
     let list = document.getElementById("studentList");
     list.innerHTML = "";
 
-    students.forEach((student, index) => {
+    students.forEach((s, i) => {
         let li = document.createElement("li");
 
         li.innerHTML = `
-            <img src="${student.photo || 'https://via.placeholder.com/50'}" width="50">
-            ${student.name} - ${student.admission}
+            <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
+            ${s.name} - ${s.admission}
             <br>
-            <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
-            <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+            <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
+            <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
         `;
 
         list.appendChild(li);
     });
 }
 
-function editStudent(index) {
-    document.getElementById("name").value = students[index].name;
-    document.getElementById("admission").value = students[index].admission;
-    editIndex = index;
+function editStudent(i) {
+    document.getElementById("name").value = students[i].name;
+    document.getElementById("admission").value = students[i].admission;
+    editIndex = i;
 }
 
-function deleteStudent(index) {
+function deleteStudent(i) {
     if (confirm("Delete this student?")) {
-        students.splice(index, 1);
+        students.splice(i, 1);
         localStorage.setItem("students", JSON.stringify(students));
         displayStudents();
     }
@@ -213,15 +215,15 @@ function searchStudent() {
 
     students
         .filter(s => s.name.toLowerCase().includes(input))
-        .forEach((student, index) => {
+        .forEach((s, i) => {
             let li = document.createElement("li");
 
             li.innerHTML = `
-                <img src="${student.photo || 'https://via.placeholder.com/50'}" width="50">
-                ${student.name} - ${student.admission}
+                <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
+                ${s.name} - ${s.admission}
                 <br>
-                <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
-                <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+                <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
+                <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
             `;
 
             list.appendChild(li);
@@ -232,6 +234,25 @@ function clearForm() {
     document.getElementById("name").value = "";
     document.getElementById("admission").value = "";
     document.getElementById("photo").value = "";
+}
+
+// ================= PDF =================
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Student List", 20, 20);
+
+    let y = 30;
+
+    students.forEach((s, i) => {
+        doc.setFontSize(12);
+        doc.text(`${i + 1}. ${s.name} - ${s.admission}`, 20, y);
+        y += 10;
+    });
+
+    doc.save("students.pdf");
 }
 </script>
 
