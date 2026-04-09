@@ -1,75 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Dashboard</title>
+    <title>School System</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: #eef1f5;
-        }
+        body { font-family: Arial; margin:0; background:#eef1f5; }
 
         .header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px;
-            text-align: center;
+            background:#2c3e50;
+            color:white;
+            padding:15px;
+            text-align:center;
         }
 
+        .nav {
+            display:flex;
+            justify-content:center;
+            background:#34495e;
+        }
+
+        .nav button {
+            padding:10px;
+            margin:5px;
+            border:none;
+            cursor:pointer;
+            color:white;
+            background:none;
+        }
+
+        .nav button:hover { background:#2c3e50; }
+
         .card {
-            background: white;
-            padding: 15px;
-            margin: 15px auto;
-            border-radius: 10px;
-            max-width: 650px;
+            background:white;
+            margin:15px auto;
+            padding:15px;
+            max-width:700px;
+            border-radius:10px;
         }
 
         input {
-            width: 95%;
-            padding: 10px;
-            margin: 6px 0;
+            width:95%;
+            padding:10px;
+            margin:5px 0;
         }
 
         button {
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
+            padding:8px;
+            margin:5px;
+            border:none;
+            cursor:pointer;
         }
 
-        .green { background: green; color: white; }
-        .orange { background: orange; color: white; }
-        .red { background: red; color: white; }
-        .blue { background: blue; color: white; }
-        .black { background: black; color: white; }
+        .green{background:green;color:white;}
+        .orange{background:orange;color:white;}
+        .red{background:red;color:white;}
+        .blue{background:blue;color:white;}
+        .black{background:black;color:white;}
 
         li {
-            list-style: none;
-            background: #f4f4f4;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        img {
-            border-radius: 50%;
+            list-style:none;
+            background:#f4f4f4;
+            margin:10px 0;
+            padding:10px;
+            border-radius:8px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="header">🎓 Student Management Dashboard</div>
+<div class="header">🏫 School Management System</div>
 
 <!-- AUTH -->
 <div class="card" id="authBox">
     <h3>Login / Register</h3>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
-
     <button class="blue" onclick="login()">Login</button>
     <button class="green" onclick="register()">Register</button>
 </div>
@@ -77,240 +85,204 @@
 <!-- SYSTEM -->
 <div id="systemBox" style="display:none;">
 
+    <div class="nav">
+        <button onclick="showSection('students')">Students</button>
+        <button onclick="showSection('teachers')">Teachers</button>
+        <button onclick="showSection('fees')">Fees</button>
+    </div>
+
     <div class="card">
         <button class="black" onclick="logout()">Logout</button>
-        <button class="blue" onclick="exportPDF()">Export PDF</button>
-    </div>
-
-    <!-- ADD STUDENT -->
-    <div class="card">
-        <h3>Add Student</h3>
-        <input id="name" placeholder="Name">
-        <input id="admission" placeholder="Admission No">
-        <input id="age" placeholder="Age">
-        <input id="class" placeholder="Class">
-        <input id="parent" placeholder="Parent Contact">
-        <input type="file" id="photo">
-
-        <button class="green" onclick="addStudent()">Add Student</button>
-    </div>
-
-    <!-- SEARCH -->
-    <div class="card">
-        <h3>Search</h3>
-        <input id="search" onkeyup="searchStudent()" placeholder="Search student">
     </div>
 
     <!-- STUDENTS -->
-    <div class="card">
-        <h3>Students</h3>
-        <ul id="studentList"></ul>
+    <div id="studentsSection">
+
+        <div class="card">
+            <h3>Add Student</h3>
+            <input id="s_name" placeholder="Name">
+            <input id="s_adm" placeholder="Admission No">
+            <input id="s_class" placeholder="Class">
+            <button class="green" onclick="addStudent()">Add</button>
+        </div>
+
+        <div class="card">
+            <h3>Students</h3>
+            <ul id="studentList"></ul>
+        </div>
+
     </div>
 
-    <!-- CHANGE PASSWORD -->
-    <div class="card">
-        <h3>Change Password 🔑</h3>
-        <input id="oldPass" type="password" placeholder="Old Password">
-        <input id="newPass" type="password" placeholder="New Password">
-        <button class="orange" onclick="changePassword()">Change Password</button>
+    <!-- TEACHERS -->
+    <div id="teachersSection" style="display:none;">
+
+        <div class="card">
+            <h3>Add Teacher</h3>
+            <input id="t_name" placeholder="Name">
+            <input id="t_subject" placeholder="Subject">
+            <input id="t_phone" placeholder="Phone">
+            <button class="green" onclick="addTeacher()">Add</button>
+        </div>
+
+        <div class="card">
+            <h3>Teachers</h3>
+            <ul id="teacherList"></ul>
+        </div>
+
+    </div>
+
+    <!-- FEES -->
+    <div id="feesSection" style="display:none;">
+
+        <div class="card">
+            <h3>Add Fee Record</h3>
+            <input id="f_name" placeholder="Student Name">
+            <input id="f_paid" placeholder="Amount Paid">
+            <input id="f_balance" placeholder="Balance">
+            <button class="green" onclick="addFee()">Add</button>
+        </div>
+
+        <div class="card">
+            <h3>Fees</h3>
+            <ul id="feeList"></ul>
+        </div>
+
     </div>
 
 </div>
 
 <script>
 // AUTH
-let users = JSON.parse(localStorage.getItem("users")) || [];
+let users = JSON.parse(localStorage.getItem("users"))||[];
 let currentUser = localStorage.getItem("currentUser");
 
-if (currentUser) showSystem();
+if(currentUser) showSystem();
 
-function register() {
-    let u = username.value;
-    let p = password.value;
-
-    if (!u || !p) return alert("Fill all fields");
-
-    users.push({ username: u, password: p });
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Registered!");
+function register(){
+    if(!username.value || !password.value) return alert("Fill fields");
+    users.push({username:username.value,password:password.value});
+    localStorage.setItem("users",JSON.stringify(users));
+    alert("Registered");
 }
 
-function login() {
-    let u = username.value;
-    let p = password.value;
-
-    let user = users.find(x => x.username === u && x.password === p);
-
-    if (user) {
-        localStorage.setItem("currentUser", u);
+function login(){
+    let u=users.find(x=>x.username===username.value && x.password===password.value);
+    if(u){
+        localStorage.setItem("currentUser",username.value);
         showSystem();
-    } else {
-        alert("Wrong login");
-    }
+    }else alert("Wrong login");
 }
 
-function logout() {
+function logout(){
     localStorage.removeItem("currentUser");
     location.reload();
 }
 
-function showSystem() {
-    authBox.style.display = "none";
-    systemBox.style.display = "block";
+function showSystem(){
+    authBox.style.display="none";
+    systemBox.style.display="block";
     displayStudents();
+    displayTeachers();
+    displayFees();
 }
 
-// CHANGE PASSWORD
-function changePassword() {
-    let oldP = oldPass.value;
-    let newP = newPass.value;
+// NAVIGATION
+function showSection(section){
+    studentsSection.style.display="none";
+    teachersSection.style.display="none";
+    feesSection.style.display="none";
 
-    let user = users.find(u => u.username === currentUser);
-
-    if (user.password !== oldP) return alert("Wrong old password");
-
-    user.password = newP;
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Password changed!");
+    document.getElementById(section+"Section").style.display="block";
 }
 
 // STUDENTS
-let students = JSON.parse(localStorage.getItem("students")) || [];
-let editIndex = -1;
+let students = JSON.parse(localStorage.getItem("students"))||[];
 
-function getBase64(file, cb) {
-    let r = new FileReader();
-    r.readAsDataURL(file);
-    r.onload = () => cb(r.result);
-}
-
-function addStudent() {
-    let n = name.value;
-    let a = admission.value;
-    let ageVal = age.value;
-    let c = document.getElementById("class").value;
-    let p = parent.value;
-    let f = photo.files[0];
-
-    if (!n || !a) return alert("Fill required fields");
-
-    if (f) {
-        getBase64(f, img => saveStudent(n, a, ageVal, c, p, img));
-    } else {
-        saveStudent(n, a, ageVal, c, p, "");
-    }
-}
-
-function saveStudent(n, a, ageVal, c, p, img) {
-    let studentData = {
-        name: n,
-        admission: a,
-        age: ageVal,
-        class: c,
-        parent: p,
-        photo: img
-    };
-
-    if (editIndex === -1) {
-        students.push(studentData);
-    } else {
-        students[editIndex] = studentData;
-        editIndex = -1;
-    }
-
-    localStorage.setItem("students", JSON.stringify(students));
-    clearForm();
+function addStudent(){
+    students.push({
+        name:s_name.value,
+        adm:s_adm.value,
+        class:s_class.value
+    });
+    localStorage.setItem("students",JSON.stringify(students));
     displayStudents();
 }
 
-function displayStudents() {
-    studentList.innerHTML = "";
-
-    students.forEach((s, i) => {
-        let li = document.createElement("li");
-
-        li.innerHTML = `
-            <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
-            <b>${s.name}</b> (${s.admission})<br>
-            Age: ${s.age || '-'} | Class: ${s.class || '-'}<br>
-            Parent: ${s.parent || '-'}<br>
-            <button class="orange" onclick="editStudent(${i})">Edit</button>
-            <button class="red" onclick="deleteStudent(${i})">Delete</button>
-        `;
-
-        studentList.appendChild(li);
+function displayStudents(){
+    studentList.innerHTML="";
+    students.forEach((s,i)=>{
+        studentList.innerHTML+=`
+        <li>
+        ${s.name} - ${s.adm} (${s.class})
+        <button class="red" onclick="delStudent(${i})">Delete</button>
+        </li>`;
     });
 }
 
-function editStudent(i) {
-    let s = students[i];
-    name.value = s.name;
-    admission.value = s.admission;
-    age.value = s.age;
-    document.getElementById("class").value = s.class;
-    parent.value = s.parent;
-    editIndex = i;
+function delStudent(i){
+    students.splice(i,1);
+    localStorage.setItem("students",JSON.stringify(students));
+    displayStudents();
 }
 
-function deleteStudent(i) {
-    if (confirm("Delete?")) {
-        students.splice(i, 1);
-        localStorage.setItem("students", JSON.stringify(students));
-        displayStudents();
-    }
-}
+// TEACHERS
+let teachers = JSON.parse(localStorage.getItem("teachers"))||[];
 
-function searchStudent() {
-    let val = search.value.toLowerCase();
-
-    studentList.innerHTML = "";
-
-    students
-        .filter(s => s.name.toLowerCase().includes(val))
-        .forEach((s, i) => {
-            let li = document.createElement("li");
-
-            li.innerHTML = `
-                <img src="${s.photo || 'https://via.placeholder.com/50'}" width="50">
-                <b>${s.name}</b> (${s.admission})<br>
-                Age: ${s.age || '-'} | Class: ${s.class || '-'}<br>
-                Parent: ${s.parent || '-'}<br>
-                <button class="orange" onclick="editStudent(${i})">Edit</button>
-                <button class="red" onclick="deleteStudent(${i})">Delete</button>
-            `;
-
-            studentList.appendChild(li);
-        });
-}
-
-function clearForm() {
-    name.value = "";
-    admission.value = "";
-    age.value = "";
-    document.getElementById("class").value = "";
-    parent.value = "";
-    photo.value = "";
-}
-
-// PDF
-function exportPDF() {
-    const { jsPDF } = window.jspdf;
-    let doc = new jsPDF();
-
-    doc.text("Student List", 20, 20);
-
-    let y = 30;
-
-    students.forEach((s, i) => {
-        doc.text(
-            `${i+1}. ${s.name} | Adm: ${s.admission} | Age: ${s.age} | Class: ${s.class} | Parent: ${s.parent}`,
-            10,
-            y
-        );
-        y += 10;
+function addTeacher(){
+    teachers.push({
+        name:t_name.value,
+        subject:t_subject.value,
+        phone:t_phone.value
     });
+    localStorage.setItem("teachers",JSON.stringify(teachers));
+    displayTeachers();
+}
 
-    doc.save("students.pdf");
+function displayTeachers(){
+    teacherList.innerHTML="";
+    teachers.forEach((t,i)=>{
+        teacherList.innerHTML+=`
+        <li>
+        ${t.name} - ${t.subject} (${t.phone})
+        <button class="red" onclick="delTeacher(${i})">Delete</button>
+        </li>`;
+    });
+}
+
+function delTeacher(i){
+    teachers.splice(i,1);
+    localStorage.setItem("teachers",JSON.stringify(teachers));
+    displayTeachers();
+}
+
+// FEES
+let fees = JSON.parse(localStorage.getItem("fees"))||[];
+
+function addFee(){
+    fees.push({
+        name:f_name.value,
+        paid:f_paid.value,
+        balance:f_balance.value
+    });
+    localStorage.setItem("fees",JSON.stringify(fees));
+    displayFees();
+}
+
+function displayFees(){
+    feeList.innerHTML="";
+    fees.forEach((f,i)=>{
+        feeList.innerHTML+=`
+        <li>
+        ${f.name} - Paid: ${f.paid} | Balance: ${f.balance}
+        <button class="red" onclick="delFee(${i})">Delete</button>
+        </li>`;
+    });
+}
+
+function delFee(i){
+    fees.splice(i,1);
+    localStorage.setItem("fees",JSON.stringify(fees));
+    displayFees();
 }
 </script>
 
