@@ -1,170 +1,397 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-  <title>Advanced SMS - Fixed</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body{font-family:Arial;padding:20px}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border:1px solid #ccc;padding:10px;text-align:left}
-    th{background:#2d6cdf;color:white}
-    input,select,button{padding:8px;margin:5px}
-  </style>
+<meta charset="UTF-8">
+<title>SmartSchool Pro FINAL + SMS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{font-family:Arial;margin:0;background:#f4f6f9;}
+.sidebar{width:220px;height:100vh;background:#2c3e50;position:fixed;color:white;}
+.sidebar button{width:100%;padding:12px;background:none;border:none;color:white;text-align:left;}
+.content{margin-left:220px;padding:20px;}
+.card{background:white;padding:15px;margin:10px 0;border-radius:8px;}
+input,select,textarea{width:100%;padding:8px;margin:5px 0;}
+button{padding:8px;background:#3498db;color:white;border:none;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #ccc;padding:8px;}
+.print{background:white;padding:20px;}
+</style>
 </head>
-<body><h2>Student Management</h2><input type="text" id="search" placeholder="Search" onkeyup="search(this.value)"><br>
-<input id="name" placeholder="Name">
-<input id="adm" placeholder="Adm No">
-<input id="class" placeholder="Class">
-<input id="stream" placeholder="Stream">
-<input id="dob" placeholder="DOB (dd/mm/yyyy)">
-<input id="parent" placeholder="Parent Name">
-<input id="phone" placeholder="Phone"><button onclick="addStudent()">Add Student</button> <button onclick="clearForm()">Clear</button>
 
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Adm</th>
-<th>Class</th>
-<th>Rank</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="table"></tbody>
-</table><h3>Performance Graph</h3>
-<select id="studentSelect"></select>
-<button onclick="showGraph()">Show Graph</button>
-<canvas id="chart"></canvas><script>
-let students=[];
-let exams=[];
-let chartInstance=null;
+<body>
 
+<!-- HOME -->
+<div id="home" style="text-align:center;padding:50px;">
+<h2>SmartSchool Pro</h2>
+<button onclick="adminPage()">Admin</button>
+<button onclick="parentPage()">Parent</button>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="alogin" style="display:none;" class="card">
+<h3>Admin Login</h3>
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="err"></p>
+</div>
+
+<!-- PARENT LOGIN -->
+<div id="plogin" style="display:none;" class="card">
+<h3>Parent Login</h3>
+<input id="padm" placeholder="Admission">
+<input id="pparent" placeholder="Parent Name">
+<button onclick="plog()">Login</button>
+<p id="perr"></p>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" style="display:none;">
+<div class="sidebar">
+<button onclick="load('students')">Students</button>
+<button onclick="load('teachers')">Teachers</button>
+<button onclick="load('subjects')">Subjects</button>
+<button onclick="load('exams')">Exams</button>
+<button onclick="load('finance')">Finance</button>
+<button onclick="load('reports')">Reports</button>
+<button onclick="load('analytics')">Analytics</button>
+<button onclick="load('sms')">SMS</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="content">
+<div id="main"></div>
+</div>
+</div>
+
+<!-- PARENT -->
+<div id="parent" style="display:none;padding:20px;">
+<h2>Parent Portal</h2>
+<div id="pcontent"></div>
+<button onclick="logout()">Logout</button>
+</div>
+
+<script>
+
+// INIT DEMO DATA
+if(!localStorage.init){
+localStorage.setItem("students",JSON.stringify([
+{name:"John Doe",adm:"ADM1",parent:"Mary"}
+]));
+localStorage.setItem("subjects",JSON.stringify(["Math","English"]));
+localStorage.setItem("marks",JSON.stringify([
+{adm:"ADM1",subject:"Math",score:80},
+{adm:"ADM1",subject:"English",score:70}
+]));
+localStorage.setItem("payments",JSON.stringify([
+{adm:"ADM1",fee:10000,paid:3000}
+]));
+localStorage.setItem("teachers",JSON.stringify([]));
+localStorage.init=true;
+}
+
+const get=k=>JSON.parse(localStorage.getItem(k)||"[]");
+const set=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+// NAV
+function adminPage(){home.style.display="none";alogin.style.display="block";}
+function parentPage(){home.style.display="none";plogin.style.display="block";}
+
+// LOGIN
+function login(){
+if(u.value==="admin" && p.value==="1234"){
+alogin.style.display="none";
+admin.style.display="block";
+}else err.innerText="Wrong login";
+}
+
+// PARENT LOGIN
+function plog(){
+let st=get("students");
+let s=st.find(x=>x.adm===padm.value && x.parent===pparent.value);
+if(!s){perr.innerText="Wrong details";return;}
+plogin.style.display="none";
+parent.style.display="block";
+loadParent(s);
+}
+
+// LOGOUT
+function logout(){location.reload();}
+
+// LOAD
+function load(p){
+if(p==="students") students();
+if(p==="teachers") teachers();
+if(p==="subjects") subjects();
+if(p==="exams") exams();
+if(p==="finance") finance();
+if(p==="reports") reports();
+if(p==="analytics") analytics();
+if(p==="sms") smsPage();
+}
+
+//////////////// STUDENTS
+function students(){
+let st=get("students");
+main.innerHTML=`
+<div class="card">
+<input id="n" placeholder="Name">
+<input id="pa" placeholder="Parent">
+<input id="ad" placeholder="ADM">
+<button onclick="addStudent()">Add</button>
+</div>
+
+<div class="card">
+${st.map(s=>`${s.name} (${s.adm})`).join("<br>")}
+</div>`;
+}
 function addStudent(){
-  let s={
-    name:name.value,
-    adm:adm.value,
-    class:document.getElementById('class').value,
-    stream:stream.value,
-    dob:dob.value,
-    parent:parent.value,
-    phone:phone.value
-  };
-  students.push(s);
-  display();
-  loadDropdown();
-  clearForm();
+let st=get("students");
+st.push({name:n.value,parent:pa.value,adm:ad.value});
+set("students",st); students();
 }
 
-function calculateRanks(){
-  let totals={};
-  exams.forEach(e=>{
-    totals[e.adm]=(totals[e.adm]||0)+Number(e.marks);
-  });
-  let sorted=Object.entries(totals).sort((a,b)=>b[1]-a[1]);
-  let ranks={};
-  sorted.forEach((s,i)=>ranks[s[0]]=i+1);
-  return ranks;
+//////////////// TEACHERS
+function teachers(){
+let t=get("teachers");
+main.innerHTML=`
+<div class="card">
+<input id="tn" placeholder="Name">
+<input id="ts" placeholder="Subject">
+<button onclick="addTeacher()">Add</button>
+</div>
+
+<div class="card">
+${t.map(x=>`${x.name} - ${x.subject}`).join("<br>")}
+</div>`;
+}
+function addTeacher(){
+let t=get("teachers");
+t.push({name:tn.value,subject:ts.value});
+set("teachers",t); teachers();
 }
 
-function display(){
-  let table=document.getElementById('table');
-  table.innerHTML="";
-  let ranks=calculateRanks();
+//////////////// SUBJECTS
+function subjects(){
+let s=get("subjects");
+main.innerHTML=`
+<div class="card">
+<input id="sub"><button onclick="addSub()">Add</button>
+</div>
 
-  students.forEach(s=>{
-    table.innerHTML+=`\
-    <tr>
-      <td>${s.name}</td>
-      <td>${s.adm}</td>
-      <td>${s.class}</td>
-      <td>${ranks[s.adm] || '-'}</td>
-      <td>
-        <button onclick="report('${s.adm}')">Report</button>
-        <button onclick="deleteStudent('${s.adm}')">Delete</button>
-      </td>
-    </tr>`;
-  });
+<div class="card">${s.join("<br>")}</div>`;
+}
+function addSub(){let s=get("subjects");s.push(sub.value);set("subjects",s);subjects();}
+
+//////////////// EXAMS
+function exams(){
+let st=get("students"), sub=get("subjects");
+main.innerHTML=`
+<div class="card">
+<select id="s">${st.map(x=>`<option>${x.adm}</option>`)}</select>
+<select id="sb">${sub.map(x=>`<option>${x}</option>`)}</select>
+<input id="sc" placeholder="Marks">
+<button onclick="saveMark()">Save</button>
+</div>`;
+}
+function saveMark(){
+let m=get("marks");
+m.push({adm:s.value,subject:sb.value,score:Number(sc.value)});
+set("marks",m);
+alert("Saved");
 }
 
-function deleteStudent(admNo){
-  students=students.filter(s=>s.adm!==admNo);
-  display();
+//////////////// FINANCE
+function finance(){
+let st=get("students"), p=get("payments");
+main.innerHTML=`
+<div class="card">
+<select id="fs">${st.map(x=>`<option>${x.adm}</option>`)}</select>
+<input id="fee" placeholder="Total Fee">
+<input id="pd" placeholder="Paid">
+<button onclick="savePay()">Save</button>
+</div>
+
+<div class="card">
+${st.map(s=>{
+let sp=p.filter(x=>x.adm===s.adm);
+let t=sp[0]?.fee||0;
+let paid=sp.reduce((a,b)=>a+b.paid,0);
+return `${s.name}: Balance ${t-paid} <button onclick="receipt('${s.adm}')">Receipt</button>`;
+}).join("<br>")}
+</div>
+
+<div id="rec"></div>
+`;
 }
 
-function report(admNo){
-  let s=students.find(x=>x.adm===admNo);
-  let ex=exams.filter(e=>e.adm===admNo);
-
-  let win=window.open('','_blank');
-  if(!win){alert('Allow popups');return;}
-
-  let html=`<h2>Report Card</h2>
-  Name: ${s.name}<br>
-  Adm: ${s.adm}<br>
-  Class: ${s.class}<br><br>
-  <table border='1' cellpadding='5'>
-  <tr><th>Subject</th><th>Marks</th></tr>`;
-
-  ex.forEach(e=>{
-    html+=`<tr><td>${e.subject}</td><td>${e.marks}</td></tr>`;
-  });
-
-  html+='</table>';
-
-  win.document.write(html);
-  win.document.close();
+function savePay(){
+let p=get("payments");
+p.push({adm:fs.value,fee:Number(fee.value),paid:Number(pd.value)});
+set("payments",p); finance();
 }
 
-function loadDropdown(){
-  let sel=document.getElementById('studentSelect');
-  sel.innerHTML="";
-  students.forEach(s=>{
-    sel.innerHTML+=`<option value="${s.adm}">${s.name}</option>`;
-  });
+function receipt(adm){
+let p=get("payments").filter(x=>x.adm===adm);
+let total=p[0]?.fee||0;
+let paid=p.reduce((a,b)=>a+b.paid,0);
+
+rec.innerHTML=`
+<div class="print">
+<h3>Receipt</h3>
+<p>ADM: ${adm}</p>
+<p>Total: ${total}</p>
+<p>Paid: ${paid}</p>
+<p>Balance: ${total-paid}</p>
+<button onclick="window.print()">Print</button>
+</div>`;
 }
 
-function showGraph(){
-  let adm=document.getElementById('studentSelect').value;
-  let ex=exams.filter(e=>e.adm===adm);
+//////////////// REPORTS
+function reports(){
+let st=get("students");
+main.innerHTML=`
+<div class="card">
+<select id="rs">${st.map(x=>`<option>${x.adm}</option>`)}</select>
+<button onclick="genReport()">Generate</button>
+</div>
 
-  if(ex.length===0){alert('No data');return;}
-
-  let labels=ex.map(e=>e.subject);
-  let data=ex.map(e=>e.marks);
-
-  if(chartInstance) chartInstance.destroy();
-
-  chartInstance=new Chart(document.getElementById('chart'),{
-    type:'bar',
-    data:{
-      labels:labels,
-      datasets:[{label:'Marks',data:data}]
-    }
-  });
+<div id="rep"></div>
+`;
 }
 
-function search(val){
-  val=val.toLowerCase();
-  document.querySelectorAll('#table tr').forEach(r=>{
-    r.style.display=r.innerText.toLowerCase().includes(val)?'':'none';
-  });
+function genReport(){
+let st=get("students"), m=get("marks");
+let s=st.find(x=>x.adm===rs.value);
+let mm=m.filter(x=>x.adm===s.adm);
+
+let rows="",t=0;
+mm.forEach(x=>{
+t+=x.score;
+rows+=`<tr><td>${x.subject}</td><td>${x.score}</td></tr>`;
+});
+
+rep.innerHTML=`
+<div class="print">
+<h2>Report Card</h2>
+<p>Name: ${s.name}</p>
+<p>ADM: ${s.adm}</p>
+<table>
+<tr><th>Subject</th><th>Marks</th></tr>
+${rows}
+</table>
+<p>Mean: ${(t/mm.length||0).toFixed(1)}</p>
+<button onclick="window.print()">Print</button>
+</div>`;
 }
 
-function clearForm(){
-  name.value="";
-  adm.value="";
-  document.getElementById('class').value="";
-  stream.value="";
-  dob.value="";
-  parent.value="";
-  phone.value="";
+//////////////// ANALYTICS
+function analytics(){
+let st=get("students"), m=get("marks");
+let res=st.map(s=>{
+let mm=m.filter(x=>x.adm===s.adm);
+let t=0; mm.forEach(x=>t+=x.score);
+return {name:s.name,mean:mm.length?t/mm.length:0};
+});
+res.sort((a,b)=>b.mean-a.mean);
+
+main.innerHTML=`
+<div class="card">Top Student: ${res[0]?.name}</div>
+<canvas id="c"></canvas>
+`;
+
+setTimeout(()=>{
+new Chart(c,{
+type:"bar",
+data:{labels:res.map(x=>x.name),datasets:[{data:res.map(x=>x.mean)}]}
+});
+},100);
 }
 
-// SAMPLE DATA (so system works immediately)
-exams=[
-  {adm:'1',subject:'Math',marks:80},
-  {adm:'1',subject:'English',marks:70},
-  {adm:'2',subject:'Math',marks:90}
-];
+//////////////// SMS MODULE
+function smsPage(){
+let st=get("students");
 
-</script></body>
+main.innerHTML=`
+<div class="card">
+<h3>Send SMS</h3>
+
+<select id="smsStudent">
+${st.map(s=>`<option value="${s.adm}">${s.name}</option>`)}
+</select>
+
+<select id="smsType">
+<option value="results">Results</option>
+<option value="fees">Fees</option>
+</select>
+
+<button onclick="generateSMS()">Generate Message</button>
+
+<textarea id="smsText" rows="5"></textarea>
+
+<button onclick="sendSMS()">Send SMS</button>
+</div>
+`;
+}
+
+function generateSMS(){
+let adm=smsStudent.value;
+let st=get("students").find(s=>s.adm===adm);
+let marks=get("marks").filter(m=>m.adm===adm);
+let pay=get("payments").filter(p=>p.adm===adm);
+
+let total=0;
+marks.forEach(m=>total+=m.score);
+let mean=(total/marks.length||0).toFixed(1);
+
+let fee=pay[0]?.fee||0;
+let paid=pay.reduce((a,b)=>a+b.paid,0);
+let balance=fee-paid;
+
+let msg="";
+
+if(smsType.value==="results"){
+msg=`Dear Parent,\n${st.name} mean score: ${mean}`;
+}
+
+if(smsType.value==="fees"){
+msg=`Dear Parent,\n${st.name} fee balance is ${balance} KES`;
+}
+
+smsText.value=msg;
+}
+
+function sendSMS(){
+if(!smsText.value){alert("Generate message first");return;}
+alert("SMS Sent (Simulation)");
+}
+
+//////////////// PARENT
+function loadParent(s){
+let m=get("marks"), p=get("payments");
+
+let mm=m.filter(x=>x.adm===s.adm);
+let rows="",t=0;
+
+mm.forEach(x=>{
+t+=x.score;
+rows+=`<tr><td>${x.subject}</td><td>${x.score}</td></tr>`;
+});
+
+let sp=p.filter(x=>x.adm===s.adm);
+let total=sp[0]?.fee||0;
+let paid=sp.reduce((a,b)=>a+b.paid,0);
+
+pcontent.innerHTML=`
+<div class="card"><b>${s.name}</b></div>
+<div class="card"><table>${rows}</table><p>Mean ${(t/mm.length||0).toFixed(1)}</p></div>
+<div class="card">Balance: ${total-paid}</div>`;
+}
+
+</script>
+
+</body>
 </html>
