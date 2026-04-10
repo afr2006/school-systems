@@ -1,344 +1,170 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-<title>School ERP System</title>
-
-<style>
-body{font-family:Arial;margin:0;background:#eef1f5;}
-.header{background:#2c3e50;color:white;padding:15px;text-align:center;}
-.nav{display:flex;flex-wrap:wrap;justify-content:center;background:#34495e;}
-.nav button{color:white;background:none;border:none;padding:10px;cursor:pointer;}
-.card{background:white;margin:15px auto;padding:15px;max-width:900px;border-radius:10px;}
-input,select{width:95%;padding:10px;margin:5px 0;}
-button{padding:8px;margin:5px;border:none;cursor:pointer;}
-.green{background:green;color:white;}
-.orange{background:orange;color:white;}
-.red{background:red;color:white;}
-.blue{background:blue;color:white;}
-li{list-style:none;background:#f4f4f4;margin:10px 0;padding:10px;border-radius:8px;}
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+  <title>Advanced SMS - Fixed</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font-family:Arial;padding:20px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid #ccc;padding:10px;text-align:left}
+    th{background:#2d6cdf;color:white}
+    input,select,button{padding:8px;margin:5px}
+  </style>
 </head>
+<body><h2>Student Management</h2><input type="text" id="search" placeholder="Search" onkeyup="search(this.value)"><br>
+<input id="name" placeholder="Name">
+<input id="adm" placeholder="Adm No">
+<input id="class" placeholder="Class">
+<input id="stream" placeholder="Stream">
+<input id="dob" placeholder="DOB (dd/mm/yyyy)">
+<input id="parent" placeholder="Parent Name">
+<input id="phone" placeholder="Phone"><button onclick="addStudent()">Add Student</button> <button onclick="clearForm()">Clear</button>
 
-<body>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Adm</th>
+<th>Class</th>
+<th>Rank</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table><h3>Performance Graph</h3>
+<select id="studentSelect"></select>
+<button onclick="showGraph()">Show Graph</button>
+<canvas id="chart"></canvas><script>
+let students=[];
+let exams=[];
+let chartInstance=null;
 
-<div class="header">🏫 School ERP System</div>
-
-<div class="card" id="authBox">
-<input id="username" placeholder="Username">
-<input id="password" type="password">
-<button class="blue" onclick="login()">Login</button>
-<button class="green" onclick="register()">Register</button>
-</div>
-
-<div id="systemBox" style="display:none;">
-
-<div class="nav">
-<button onclick="showSection('students')">Students</button>
-<button onclick="showSection('teachers')">Teachers</button>
-<button onclick="showSection('staff')">Staff</button>
-<button onclick="showSection('fees')">Fees</button>
-<button onclick="showSection('boarding')">Boarding</button>
-<button onclick="showSection('council')">Council</button>
-<button onclick="showSection('bom')">BOM</button>
-<button onclick="showSection('exams')">Exams</button>
-<button onclick="showSection('reports')">Reports</button>
-</div>
-
-<div class="card"><button onclick="logout()">Logout</button></div>
-
-<!-- STUDENTS -->
-<div id="studentsSection">
-<div class="card">
-<input id="s_name" placeholder="Name">
-<input id="s_adm" placeholder="Admission">
-<input id="s_class" placeholder="Class">
-<input id="s_age" placeholder="Age">
-<input id="s_parent" placeholder="Parent Contact">
-<button class="green" onclick="addStudent()">Save</button>
-</div>
-<div class="card"><ul id="studentList"></ul></div>
-</div>
-
-<!-- TEACHERS -->
-<div id="teachersSection" style="display:none;">
-<div class="card">
-<input id="t_name" placeholder="Name">
-<select id="t_role">
-<option>Principal</option><option>Deputy</option><option>Class Teacher</option><option>Boarding Master</option>
-</select>
-<input id="t_class" placeholder="Class">
-<input id="t_subject" placeholder="Subject">
-<input id="t_phone" placeholder="Phone">
-<button class="green" onclick="addTeacher()">Save</button>
-</div>
-<div class="card"><ul id="teacherList"></ul></div>
-</div>
-
-<!-- STAFF -->
-<div id="staffSection" style="display:none;">
-<div class="card">
-<input id="st_name" placeholder="Name">
-<input id="st_role" placeholder="Role">
-<button onclick="addStaff()">Save</button>
-</div>
-<div class="card"><ul id="staffList"></ul></div>
-</div>
-
-<!-- FEES -->
-<div id="feesSection" style="display:none;">
-<div class="card">
-<select id="f_student"></select>
-<input id="f_paid" placeholder="Amount Paid">
-<button onclick="addFee()">Save</button>
-</div>
-<div class="card"><ul id="feeList"></ul></div>
-</div>
-
-<!-- BOARDING -->
-<div id="boardingSection" style="display:none;">
-<div class="card">
-<select id="b_student"></select>
-<select id="b_teacher"></select>
-<select id="b_dorm"><option>Simba</option><option>Chui</option></select>
-<button onclick="addBoarding()">Assign</button>
-</div>
-<div class="card"><ul id="boardingList"></ul></div>
-</div>
-
-<!-- COUNCIL -->
-<div id="councilSection" style="display:none;">
-<div class="card">
-<select id="c_student"></select>
-<input id="c_position" placeholder="Position">
-<button onclick="addCouncil()">Save</button>
-</div>
-<div class="card"><ul id="councilList"></ul></div>
-</div>
-
-<!-- BOM -->
-<div id="bomSection" style="display:none;">
-<div class="card">
-<input id="bom_name" placeholder="Name">
-<input id="bom_position" placeholder="Position">
-<button onclick="addBOM()">Save</button>
-</div>
-<div class="card"><ul id="bomList"></ul></div>
-</div>
-
-<!-- EXAMS -->
-<div id="examsSection" style="display:none;">
-<div class="card">
-<select id="ex_student"></select>
-<input id="ex_subject" placeholder="Subject">
-<input id="ex_marks" placeholder="Marks">
-<button onclick="addExam()">Save</button>
-</div>
-<div class="card"><ul id="examList"></ul></div>
-</div>
-
-<!-- REPORTS -->
-<div id="reportsSection" style="display:none;">
-<div class="card">
-<select id="report_student"></select>
-<button onclick="generateReport()">Generate</button>
-<button onclick="downloadPDF()">PDF</button>
-</div>
-
-<div class="card" id="reportCard"></div>
-<div class="card"><ul id="rankingList"></ul></div>
-</div>
-
-</div>
-
-<script>
-
-// AUTH
-let users=JSON.parse(localStorage.getItem("users"))||[];
-let currentUser=localStorage.getItem("currentUser");
-if(currentUser) showSystem();
-
-function register(){users.push({username:username.value,password:password.value});
-localStorage.setItem("users",JSON.stringify(users));}
-
-function login(){
-let u=users.find(x=>x.username===username.value && x.password===password.value);
-if(u){localStorage.setItem("currentUser",username.value);showSystem();}
-}
-
-function logout(){localStorage.removeItem("currentUser");location.reload();}
-
-// DATA
-let students=JSON.parse(localStorage.getItem("students"))||[];
-let teachers=JSON.parse(localStorage.getItem("teachers"))||[];
-let staff=JSON.parse(localStorage.getItem("staff"))||[];
-let fees=JSON.parse(localStorage.getItem("fees"))||[];
-let boarding=JSON.parse(localStorage.getItem("boarding"))||[];
-let council=JSON.parse(localStorage.getItem("council"))||[];
-let bom=JSON.parse(localStorage.getItem("bom"))||[];
-let exams=JSON.parse(localStorage.getItem("exams"))||[];
-
-// NAV
-function showSection(s){
-["students","teachers","staff","fees","boarding","council","bom","exams","reports"].forEach(x=>{
-document.getElementById(x+"Section").style.display="none";
-});
-document.getElementById(s+"Section").style.display="block";
-}
-
-function showSystem(){
-authBox.style.display="none";
-systemBox.style.display="block";
-loadAll();
-}
-
-// LOAD ALL
-function loadAll(){
-studentList.innerHTML="";
-students.forEach((s,i)=>{
-studentList.innerHTML+=`<li>${s.name}</li>`;
-});
-
-teacherList.innerHTML="";
-teachers.forEach(t=>{
-teacherList.innerHTML+=`<li>${t.name} - ${t.role}</li>`;
-});
-
-st_name.value="";
-
-loadDropdowns();
-displayExams();
-}
-
-// DROPDOWNS
-function loadDropdowns(){
-[f_student,b_student,c_student,ex_student,report_student].forEach(el=>el.innerHTML="");
-students.forEach((s,i)=>{
-f_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-b_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-c_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-ex_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-report_student.innerHTML+=`<option value="${i}">${s.name}</option>`;
-});
-
-b_teacher.innerHTML="";
-teachers.forEach((t,i)=>{
-b_teacher.innerHTML+=`<option value="${i}">${t.name}</option>`;
-});
-}
-
-// ADD FUNCTIONS
 function addStudent(){
-students.push({name:s_name.value});
-localStorage.setItem("students",JSON.stringify(students));
-loadAll();
+  let s={
+    name:name.value,
+    adm:adm.value,
+    class:document.getElementById('class').value,
+    stream:stream.value,
+    dob:dob.value,
+    parent:parent.value,
+    phone:phone.value
+  };
+  students.push(s);
+  display();
+  loadDropdown();
+  clearForm();
 }
 
-function addTeacher(){
-teachers.push({name:t_name.value,role:t_role.value});
-localStorage.setItem("teachers",JSON.stringify(teachers));
-loadAll();
+function calculateRanks(){
+  let totals={};
+  exams.forEach(e=>{
+    totals[e.adm]=(totals[e.adm]||0)+Number(e.marks);
+  });
+  let sorted=Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+  let ranks={};
+  sorted.forEach((s,i)=>ranks[s[0]]=i+1);
+  return ranks;
 }
 
-function addStaff(){
-staff.push({name:st_name.value});
-localStorage.setItem("staff",JSON.stringify(staff));
+function display(){
+  let table=document.getElementById('table');
+  table.innerHTML="";
+  let ranks=calculateRanks();
+
+  students.forEach(s=>{
+    table.innerHTML+=`\
+    <tr>
+      <td>${s.name}</td>
+      <td>${s.adm}</td>
+      <td>${s.class}</td>
+      <td>${ranks[s.adm] || '-'}</td>
+      <td>
+        <button onclick="report('${s.adm}')">Report</button>
+        <button onclick="deleteStudent('${s.adm}')">Delete</button>
+      </td>
+    </tr>`;
+  });
 }
 
-function addFee(){
-let s=students[f_student.value];
-fees.push({student:s.name,paid:f_paid.value});
-localStorage.setItem("fees",JSON.stringify(fees));
+function deleteStudent(admNo){
+  students=students.filter(s=>s.adm!==admNo);
+  display();
 }
 
-function addBoarding(){
-let s=students[b_student.value];
-let t=teachers[b_teacher.value];
-boarding.push({student:s.name,dorm:b_dorm.value,teacher:t.name});
-localStorage.setItem("boarding",JSON.stringify(boarding));
+function report(admNo){
+  let s=students.find(x=>x.adm===admNo);
+  let ex=exams.filter(e=>e.adm===admNo);
+
+  let win=window.open('','_blank');
+  if(!win){alert('Allow popups');return;}
+
+  let html=`<h2>Report Card</h2>
+  Name: ${s.name}<br>
+  Adm: ${s.adm}<br>
+  Class: ${s.class}<br><br>
+  <table border='1' cellpadding='5'>
+  <tr><th>Subject</th><th>Marks</th></tr>`;
+
+  ex.forEach(e=>{
+    html+=`<tr><td>${e.subject}</td><td>${e.marks}</td></tr>`;
+  });
+
+  html+='</table>';
+
+  win.document.write(html);
+  win.document.close();
 }
 
-function addCouncil(){
-let s=students[c_student.value];
-council.push({student:s.name,position:c_position.value});
-localStorage.setItem("council",JSON.stringify(council));
+function loadDropdown(){
+  let sel=document.getElementById('studentSelect');
+  sel.innerHTML="";
+  students.forEach(s=>{
+    sel.innerHTML+=`<option value="${s.adm}">${s.name}</option>`;
+  });
 }
 
-function addBOM(){
-bom.push({name:bom_name.value,position:bom_position.value});
-localStorage.setItem("bom",JSON.stringify(bom));
+function showGraph(){
+  let adm=document.getElementById('studentSelect').value;
+  let ex=exams.filter(e=>e.adm===adm);
+
+  if(ex.length===0){alert('No data');return;}
+
+  let labels=ex.map(e=>e.subject);
+  let data=ex.map(e=>e.marks);
+
+  if(chartInstance) chartInstance.destroy();
+
+  chartInstance=new Chart(document.getElementById('chart'),{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{label:'Marks',data:data}]
+    }
+  });
 }
 
-// EXAMS
-function grade(m){
-if(m>=80)return "A";
-if(m>=70)return "B";
-if(m>=60)return "C";
-if(m>=50)return "D";
-return "E";
+function search(val){
+  val=val.toLowerCase();
+  document.querySelectorAll('#table tr').forEach(r=>{
+    r.style.display=r.innerText.toLowerCase().includes(val)?'':'none';
+  });
 }
 
-function addExam(){
-let s=students[ex_student.value];
-let m=Number(ex_marks.value);
-let g=grade(m);
-exams.push({student:s.name,subject:ex_subject.value,marks:m,grade:g});
-localStorage.setItem("exams",JSON.stringify(exams));
-displayExams();
+function clearForm(){
+  name.value="";
+  adm.value="";
+  document.getElementById('class').value="";
+  stream.value="";
+  dob.value="";
+  parent.value="";
+  phone.value="";
 }
 
-function displayExams(){
-examList.innerHTML="";
-exams.forEach(e=>{
-examList.innerHTML+=`<li>${e.student} ${e.subject} ${e.marks} (${e.grade})</li>`;
-});
-}
+// SAMPLE DATA (so system works immediately)
+exams=[
+  {adm:'1',subject:'Math',marks:80},
+  {adm:'1',subject:'English',marks:70},
+  {adm:'2',subject:'Math',marks:90}
+];
 
-// REPORT
-function generateReport(){
-let s=students[report_student.value].name;
-let data=exams.filter(e=>e.student===s);
-
-let total=0,html=`<h3>${s}</h3>`;
-data.forEach(d=>{
-total+=d.marks;
-html+=`${d.subject}: ${d.marks} (${d.grade})<br>`;
-});
-
-let avg=data.length? total/data.length:0;
-html+=`<br><b>Average: ${avg.toFixed(1)}</b>`;
-reportCard.innerHTML=html;
-
-rankStudents();
-}
-
-// RANKING
-function rankStudents(){
-let arr=students.map(s=>{
-let stu=exams.filter(e=>e.student===s.name);
-let total=stu.reduce((a,b)=>a+b.marks,0);
-let avg=stu.length? total/stu.length:0;
-return {name:s.name,avg};
-});
-
-arr.sort((a,b)=>b.avg-a.avg);
-rankingList.innerHTML="";
-arr.forEach((r,i)=>{
-rankingList.innerHTML+=`<li>${i+1}. ${r.name} (${r.avg.toFixed(1)})</li>`;
-});
-}
-
-// PDF
-function downloadPDF(){
-const { jsPDF } = window.jspdf;
-let doc=new jsPDF();
-doc.text(reportCard.innerText,10,10);
-doc.save("report.pdf");
-}
-
-</script>
-
-</body>
+</script></body>
 </html>
